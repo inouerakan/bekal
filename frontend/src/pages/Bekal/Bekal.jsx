@@ -1,25 +1,16 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, X, ChevronDown, UploadCloud } from 'lucide-react';
 import PeluangCard from '../../components/PeluangCard'; // Pastikan path import sesuai
-
-// Data Dummy awal
-const initialOpportunities = [
-  { id: 1, category: 'Beasiswa', title: 'Beasiswa Prestasi Bakti Digital SMK', organizer: 'Yayasan Teknologi Indonesia', description: 'Program beasiswa penuh untuk siswa SMK berprestasi di bidang teknologi dan digital.', date: '28 Juni 2080', price: 'Gratis', isPaid: false },
-  { id: 2, category: 'Lomba', title: 'Software Development Competition', organizer: 'Himpunan Mahasiswa Komputer', description: 'Kompetisi pengembangan perangkat lunak tingkat nasional dengan total hadiah 50 juta.', date: '28 Juni 2080', price: 'Rp 50.000 / Tim', isPaid: true },
-  { id: 3, category: 'Karir & Magang', title: 'Junior Web Developer (Magang PKL)', organizer: 'PT Teknologi Maju', description: 'Kesempatan magang bagi siswa SMK jurusan RPL untuk belajar langsung di industri.', date: '28 Juni 2080', price: 'Paid Internship', isPaid: false },
-  { id: 4, category: 'Beasiswa', title: 'Beasiswa Seni & Budaya Nusantara', organizer: 'Kementerian Pendidikan', description: 'Dukungan dana pendidikan bagi pelajar yang aktif dalam pelestarian seni budaya daerah.', date: '30 Juni 2080', price: 'Gratis', isPaid: false },
-  { id: 5, category: 'Lomba', title: 'Olimpiade Sains Nasional (OSN)', organizer: 'Puspresnas', description: 'Ajang kompetisi sains tahunan untuk menjaring talenta muda terbaik Indonesia.', date: '15 Juli 2080', price: 'Gratis', isPaid: false },
-  { id: 6, category: 'Karir & Magang', title: 'Content Creator Intern', organizer: 'Kreatif Media Agency', description: 'Magang remote untuk pelajar yang memiliki passion di bidang video editing dan sosial media.', date: '20 Juli 2080', price: 'Sertifikat + Fee', isPaid: false },
-  { id: 7, category: 'Beasiswa', title: 'Beasiswa Atlet Muda Berprestasi', organizer: 'KONI Pusat', description: 'Beasiswa khusus bagi pelajar yang memiliki pencapaian medali di tingkat provinsi/nasional.', date: '01 Agustus 2080', price: 'Gratis', isPaid: false },
-  { id: 8, category: 'Lomba', title: 'Hackathon for High School', organizer: 'Tech Community ID', description: 'Lomba coding 24 jam non-stop khusus untuk pelajar SMA/SMK se-Jabodetabek.', date: '10 Agustus 2080', price: 'Rp 25.000 / Orang', isPaid: true },
-  { id: 9, category: 'Karir & Magang', title: 'Admin Social Media Part-time', organizer: 'Toko Baju Online', description: 'Lowongan kerja paruh waktu yang bisa dikerjakan setelah jam sekolah.', date: '12 Agustus 2080', price: 'Gaji Bulanan', isPaid: false },
-];
+import { apiFetch } from '../../lib/api';
 
 export default function Bekal() {
-  const [opportunities, setOpportunities] = useState(initialOpportunities);
+  const [opportunities, setOpportunities] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
   const itemsPerPage = 6; 
 
   // State Modal
@@ -37,17 +28,24 @@ export default function Bekal() {
 
   const filters = ['Semua', 'Beasiswa', 'Karir & Magang', 'Lomba'];
 
-  // Logika Filter & Search
-  const filteredData = opportunities.filter(item => {
-    const matchesCategory = activeFilter === 'Semua' || item.category === activeFilter;
-    const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                          item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          item.organizer.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  // Logika Pagination
-  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    apiFetch(`/api/opportunities?page=${currentPage}&limit=${itemsPerPage}&category=${encodeURIComponent(activeFilter)}&search=${encodeURIComponent(searchQuery)}`)
+      .then((result) => {
+        if (!cancelled) {
+          setOpportunities(result.data || []);
+          setTotalPages(result.totalPages || 1);
+        }
+      })
+      .catch((fetchError) => {
+        if (!cancelled) setError(fetchError.message);
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [activeFilter, currentPage, searchQuery]);
   
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -59,9 +57,7 @@ export default function Bekal() {
     setCurrentPage(1);
   };
 
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentOpportunities = filteredData.slice(indexOfFirstItem, indexOfLastItem);
+  const currentOpportunities = opportunities;
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
   const goToNextPage = () => setCurrentPage(prev => Math.min(prev + 1, totalPages));
@@ -74,29 +70,17 @@ export default function Bekal() {
   };
 
   // Handle Submit
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
-    // Mapping kategori form ke kategori card agar filter jalan
-    let mappedCategory = 'Beasiswa';
-    if (formData.category.includes('Lomba')) mappedCategory = 'Lomba';
-    if (formData.category.includes('Karir') || formData.category.includes('Jasa')) mappedCategory = 'Karir & Magang';
-
-    const newOpportunity = {
-      id: opportunities.length + 1,
-      category: mappedCategory,
-      title: formData.title,
-      organizer: formData.organizer,
-      description: formData.description,
-      date: formData.deadline || 'Segera', // Format tanggal sederhana
-      price: formData.price || 'Gratis',
-      isPaid: formData.price && formData.price.toLowerCase() !== 'gratis' ? true : false
-    };
-
-    setOpportunities([newOpportunity, ...opportunities]);
-    setIsModalOpen(false);
-    setFormData({ category: 'Beasiswa Pendidikan', title: '', organizer: '', description: '', price: '', deadline: '' });
-    setCurrentPage(1);
+    try {
+      await apiFetch('/api/opportunities', { method: 'POST', body: JSON.stringify(formData) });
+      setIsModalOpen(false);
+      setFormData({ category: 'Beasiswa Pendidikan', title: '', organizer: '', description: '', price: '', deadline: '' });
+      setCurrentPage(1);
+      setError('');
+    } catch (submitError) {
+      setError(submitError.message);
+    }
   };
 
   return (
@@ -161,8 +145,11 @@ export default function Bekal() {
         </div>
 
         {/* === MAIN CONTENT: GRID PELUANG === */}
+        {error && <p className="text-center text-sm text-red-600" role="alert">{error}</p>}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]">
-          {currentOpportunities.length > 0 ? (
+          {isLoading ? (
+            <p className="col-span-full text-center text-sm text-dark-2">Memuat peluang...</p>
+          ) : currentOpportunities.length > 0 ? (
             currentOpportunities.map((item) => (
               <PeluangCard key={item.id} data={item} />
             ))

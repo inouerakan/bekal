@@ -1,17 +1,18 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaInstagram, FaFacebook, FaTwitter, FaTwitch } from 'react-icons/fa';
 import { X, User, IdCard, Phone, Mail, Eye, EyeOff } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
+import { apiFetch, saveSession } from '../../lib/api';
 
-export default function RegisterPage() {
-  const [showPassword, setShowPassword] = useState(false);
-
-  // Komponen Input Reusable untuk menjaga konsistensi style
-  const InputField = ({ type, placeholder, icon: Icon, fullWidth = false }) => (
+function InputField({ type, name, value, onChange, placeholder, icon: Icon, fullWidth = false }) {
+  return (
     <div className={`relative ${fullWidth ? 'w-full' : ''}`}>
       <input 
         type={type} 
+        name={name}
+        value={value}
+        onChange={onChange}
         placeholder={placeholder} 
         className="w-full px-4 py-2.5 pr-10 rounded-lg bg-gray-50 border-b border-dotted border-gray-300 text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all text-xs shadow-sm"
       />
@@ -22,6 +23,36 @@ export default function RegisterPage() {
       )}
     </div>
   );
+}
+
+export default function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ full_name: '', first_name: '', last_name: '', email: '', password: '', phone: '' });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const updateField = (name) => (event) => {
+    setFormData((current) => ({ ...current, [name]: event.target.value }));
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const session = await apiFetch('/api/auth/register', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      saveSession(session);
+      navigate('/');
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row font-sans bg-white">
@@ -100,12 +131,15 @@ export default function RegisterPage() {
           </div>
 
           {/* Form */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             
             {/* Username (Full Width) */}
             <InputField 
               type="text" 
-              placeholder="Username" 
+              name="full_name"
+              value={formData.full_name}
+              onChange={updateField('full_name')}
+              placeholder="Nama Lengkap" 
               icon={User} 
               fullWidth 
             />
@@ -114,11 +148,17 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <InputField 
                 type="text" 
+                name="first_name"
+                value={formData.first_name}
+                onChange={updateField('first_name')}
                 placeholder="Nama Depan" 
                 icon={IdCard} 
               />
               <InputField 
                 type="text" 
+                name="last_name"
+                value={formData.last_name}
+                onChange={updateField('last_name')}
                 placeholder="Nama Belakang" 
                 icon={IdCard} 
               />
@@ -128,11 +168,17 @@ export default function RegisterPage() {
             <div className="grid grid-cols-2 gap-3">
               <InputField 
                 type="tel" 
+                name="phone"
+                value={formData.phone}
+                onChange={updateField('phone')}
                 placeholder="No Telepon" 
                 icon={Phone} 
               />
               <InputField 
                 type="email" 
+                name="email"
+                value={formData.email}
+                onChange={updateField('email')}
                 placeholder="Email" 
                 icon={Mail} 
               />
@@ -142,6 +188,9 @@ export default function RegisterPage() {
             <div className="relative w-full">
               <input 
                 type={showPassword ? "text" : "password"} 
+                name="password"
+                value={formData.password}
+                onChange={updateField('password')}
                 placeholder="Password" 
                 className="w-full px-4 py-2.5 pr-10 rounded-lg bg-gray-50 border-b border-dotted border-gray-300 text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-1 focus:ring-primary/20 focus:border-primary transition-all text-xs shadow-sm"
               />
@@ -154,12 +203,14 @@ export default function RegisterPage() {
               </button>
             </div>
 
+            {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
+
             {/* Submit Button */}
             <button 
               type="submit"
               className="w-full py-2.5 rounded-full bg-light-2 text-dark-1 font-bold text-xs uppercase tracking-wider hover:bg-primary hover:text-light-1 transition-all duration-300 shadow-md mt-4 transform hover:-translate-y-0.5"
             >
-              Sign Up
+              {isSubmitting ? 'Memproses...' : 'Sign Up'}
             </button>
 
           </form>

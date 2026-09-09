@@ -1,11 +1,34 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { FaInstagram, FaFacebook, FaTwitter, FaTwitch } from 'react-icons/fa';
 import { X, Lock } from 'lucide-react';
 import logo from '../../assets/images/logo.png';
+import { apiFetch, saveSession } from '../../lib/api';
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
+  const [formData, setFormData] = useState({ email: '', password: '' });
+  const [error, setError] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const navigate = useNavigate();
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError('');
+    setIsSubmitting(true);
+    try {
+      const session = await apiFetch('/api/auth/login', {
+        method: 'POST',
+        body: JSON.stringify(formData),
+      });
+      saveSession(session);
+      navigate('/');
+    } catch (submitError) {
+      setError(submitError.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <div className="min-h-screen w-full flex flex-col md:flex-row font-sans bg-white">
@@ -91,12 +114,15 @@ export default function LoginPage() {
           </div>
 
           {/* Form */}
-          <form className="space-y-4" onSubmit={(e) => e.preventDefault()}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             
             {/* Username/Email Input - Text & Padding dikurangi */}
             <div className="relative">
               <input 
                 type="text" 
+                name="email"
+                value={formData.email}
+                onChange={(event) => setFormData({ ...formData, email: event.target.value })}
                 placeholder="Username Atau Email" 
                 className="w-full px-4 py-2.5 rounded-lg bg-gray-50 border border-gray-100 text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-xs shadow-sm"
               />
@@ -106,6 +132,9 @@ export default function LoginPage() {
             <div className="relative">
               <input 
                 type={showPassword ? "text" : "password"} 
+                name="password"
+                value={formData.password}
+                onChange={(event) => setFormData({ ...formData, password: event.target.value })}
                 placeholder="Password" 
                 className="w-full px-4 py-2.5 pr-10 rounded-lg bg-gray-50 border border-gray-100 text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary/30 transition-all text-xs shadow-sm"
               />
@@ -117,6 +146,8 @@ export default function LoginPage() {
                 <Lock className="w-3.5 h-3.5" />
               </button>
             </div>
+
+            {error && <p className="text-xs text-red-600" role="alert">{error}</p>}
 
             {/* Options Row - Text xs */}
             <div className="flex items-center justify-between text-xs font-medium text-dark-1 pt-1">
@@ -134,7 +165,7 @@ export default function LoginPage() {
               type="submit"
               className="w-full py-2.5 rounded-full bg-primary text-light-1 font-bold text-xs uppercase tracking-wider hover:bg-dark-1 transition-all duration-300 shadow-md mt-2 transform hover:-translate-y-0.5"
             >
-              Login
+              {isSubmitting ? 'Memproses...' : 'Login'}
             </button>
 
           </form>
