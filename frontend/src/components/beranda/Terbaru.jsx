@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import PeluangCard from '../../../components/PeluangCard'; // Sesuaikan path import
+import PeluangCard from '../ui/PeluangCard'; // Sesuaikan path import
 
 const opportunities = [
   {

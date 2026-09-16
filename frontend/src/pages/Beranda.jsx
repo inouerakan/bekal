@@ -1,6 +1,6 @@
-import Hero from './components/Hero';
-import Terbaru from './components/Terbaru';
-import Footer from './components/Footer';
+import Hero from '../components/beranda/Hero';
+import Terbaru from '../components/beranda/Terbaru';
+import Footer from '../components/ui/Footer';
 
 export default function Beranda() {
     return (

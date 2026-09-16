@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, X, ChevronDown, UploadCloud } from 'lucide-react';
-import PeluangCard from '../../components/PeluangCard'; // Pastikan path import sesuai
-import { apiFetch } from '../../lib/api';
+import PeluangCard from '../components/ui/PeluangCard'; // Pastikan path import sesuai
+import { apiFetch } from '../lib/api';
 
 export default function Bekal() {
   const [opportunities, setOpportunities] = useState([]);
@@ -101,7 +101,7 @@ export default function Bekal() {
 
           {/* Search Bar */}
           <div className="w-full max-w-xl relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/5 rounded-full blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-primary/5 rounded-full blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
             <div className="relative flex items-center bg-white rounded-full shadow-lg border-2 border-light-2/40 p-1.5 pl-5 transition-all group-focus-within:border-primary/30 group-focus-within:shadow-xl">
               <Search className="w-5 h-5 text-dark-2/40 mr-3 shrink-0" />
               <input 
@@ -146,7 +146,7 @@ export default function Bekal() {
 
         {/* === MAIN CONTENT: GRID PELUANG === */}
         {error && <p className="text-center text-sm text-red-600" role="alert">{error}</p>}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-[400px]">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 min-h-100">
           {isLoading ? (
             <p className="col-span-full text-center text-sm text-dark-2">Memuat peluang...</p>
           ) : currentOpportunities.length > 0 ? (

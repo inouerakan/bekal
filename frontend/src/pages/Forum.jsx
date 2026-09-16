@@ -1,5 +1,7 @@
+// src/pages/Forum.jsx
 import { useState } from 'react';
-import { MessageSquare, Heart, Search, Plus, ArrowRight, ChevronLeft, ChevronRight, X, Send } from 'lucide-react';
+import { MessageSquare, Search, Plus, ArrowRight, ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import ForumCard from '../components/ui/ForumCard'; // Import komponen yang sudah dipisahkan
 
 // Data Dummy awal
 const initialDiscussions = [
@@ -57,7 +59,7 @@ export default function Forum() {
     const newDiscussion = {
       id: discussions.length + 1,
       title: newTitle,
-      author: 'Anda (User)', // Hardcoded untuk dummy
+      author: 'Anda (User)',
       avatar: 'ME',
       content: newContent,
       likes: 0,
@@ -65,14 +67,11 @@ export default function Forum() {
       time: 'Baru saja'
     };
 
-    // Tambahkan ke awal array agar muncul paling atas
     setDiscussions([newDiscussion, ...discussions]);
-    
-    // Reset form dan tutup modal
     setNewTitle('');
     setNewContent('');
     setIsModalOpen(false);
-    setCurrentPage(1); // Kembali ke halaman 1 untuk melihat post baru
+    setCurrentPage(1);
   };
 
   return (
@@ -93,7 +92,7 @@ export default function Forum() {
 
           {/* Search Bar */}
           <div className="w-full max-w-xl relative group">
-            <div className="absolute -inset-0.5 bg-gradient-to-r from-primary/20 to-primary/5 rounded-full blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
+            <div className="absolute -inset-0.5 bg-linear-to-r from-primary/20 to-primary/5 rounded-full blur opacity-0 group-focus-within:opacity-100 transition duration-500"></div>
             <div className="relative flex items-center bg-white rounded-full shadow-lg border-2 border-light-2/40 p-1.5 pl-5 transition-all group-focus-within:border-primary/30 group-focus-within:shadow-xl">
               <Search className="w-5 h-5 text-dark-2/40 mr-3 shrink-0" />
               <input 
@@ -109,7 +108,7 @@ export default function Forum() {
             </div>
           </div>
 
-          {/* Tombol Aksi - Membuka Modal */}
+          {/* Tombol Aksi */}
           <button 
             onClick={() => setIsModalOpen(true)}
             className="flex items-center justify-center gap-2 bg-dark-1 text-light-1 px-6 py-2.5 rounded-full text-xs font-bold hover:bg-primary transition-colors shadow-md mt-2"
@@ -120,10 +119,10 @@ export default function Forum() {
         </div>
 
         {/* === MAIN CONTENT: LIST DISCUSSIONS === */}
-        <div className="flex flex-col gap-4 min-h-[400px]">
+        <div className="flex flex-col gap-4 min-h-100">
           {currentDiscussions.length > 0 ? (
             currentDiscussions.map((item) => (
-              <DiscussionCard key={item.id} data={item} />
+              <ForumCard key={item.id} data={item} />
             ))
           ) : (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-light-2">
@@ -185,29 +184,24 @@ export default function Forum() {
       {/* === MODAL POPUP (Create Discussion) === */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          {/* Backdrop Overlay */}
           <div 
             className="absolute inset-0 bg-dark-1/60 backdrop-blur-sm transition-opacity" 
             onClick={() => setIsModalOpen(false)}
           ></div>
 
-          {/* Modal Content */}
           <div className="relative bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
             
-            {/* Modal Header */}
             <div className="bg-primary p-4 flex items-center gap-3">
-              <div className="bg-green-500 p-1.5 rounded-full text-white">
+              <div className="bg-white/20 p-1.5 rounded-full text-white">
                 <Plus className="w-4 h-4" />
               </div>
-              <h3 className="text-light-1 font-bold text-lg">Buat diskusi Baru</h3>
+              <h3 className="text-light-1 font-bold text-lg">Buat Diskusi Baru</h3>
             </div>
 
-            {/* Modal Body (Form) */}
             <form onSubmit={handleSubmitDiscussion} className="p-6 space-y-5">
               
-              {/* Input Judul */}
               <div className="space-y-2">
-                <label className="text-dark-1 font-bold text-sm block">Judul Info</label>
+                <label className="text-dark-1 font-bold text-sm block">Judul Diskusi</label>
                 <input 
                   type="text" 
                   value={newTitle}
@@ -218,23 +212,22 @@ export default function Forum() {
                 />
               </div>
 
-              {/* Textarea Konten */}
               <div className="space-y-2">
+                <label className="text-dark-1 font-bold text-sm block">Isi Diskusi</label>
                 <textarea 
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
-                  placeholder="Tuliskan Pertanyaan atau informasi anda secara detail disini. Jelaskan konteks dengan baik agar mudah dimengerti" 
+                  placeholder="Tuliskan pertanyaan atau informasi anda secara detail..." 
                   rows={4}
                   className="w-full bg-gray-100 rounded-xl px-4 py-3 text-sm text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all border-none shadow-inner resize-none"
                   required
                 ></textarea>
               </div>
 
-              {/* Modal Footer Actions */}
               <div className="flex items-center justify-between gap-3 pt-2">
                 <button 
                   type="submit"
-                  className="flex-1 bg-primary hover:bg-dark-1 text-light-1 py-3 rounded-full font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-md"
+                  className="flex-1 bg-primary hover:bg-dark-1 text-light-1 py-3 rounded-xl font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-md"
                 >
                   Kirim Diskusi
                   <Send className="w-4 h-4" />
@@ -242,9 +235,9 @@ export default function Forum() {
                 <button 
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-8 bg-primary hover:bg-dark-1 text-light-1 py-3 rounded-full font-bold text-sm transition-colors shadow-md"
+                  className="px-6 bg-light-2 hover:bg-light-2/80 text-dark-1 py-3 rounded-xl font-bold text-sm transition-colors"
                 >
-                  Tutup
+                  Batal
                 </button>
               </div>
 
@@ -253,51 +246,5 @@ export default function Forum() {
         </div>
       )}
     </section>
-  );
-}
-
-// Komponen Kartu Diskusi
-function DiscussionCard({ data }) {
-  return (
-    <div className="bg-white rounded-xl border-2 border-light-2/50 p-5 flex flex-col sm:flex-row gap-4 hover:border-primary/20 hover:shadow-sm transition-all duration-300 group cursor-pointer">
-      
-      <div className="flex sm:flex-col items-center sm:items-start gap-3 sm:gap-2 shrink-0">
-        <div className="w-10 h-10 rounded-full bg-primary/5 text-primary flex items-center justify-center text-xs font-bold border border-primary/10">
-          {data.avatar}
-        </div>
-        <div className="sm:hidden flex flex-col items-end">
-           <span className="text-[10px] text-dark-2/50">{data.time}</span>
-        </div>
-      </div>
-
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 mb-1">
-          <span className="text-xs font-bold text-dark-1">{data.author}</span>
-          <span className="w-1 h-1 rounded-full bg-light-2"></span>
-          <span className="text-[10px] text-dark-2/50 hidden sm:inline">{data.time}</span>
-        </div>
-        
-        <h3 className="text-dark-1 text-base font-bold mb-1.5 leading-snug group-hover:text-primary transition-colors truncate">
-          {data.title}
-        </h3>
-        
-        <p className="text-dark-2/70 text-xs leading-relaxed line-clamp-2">
-          {data.content}
-        </p>
-      </div>
-
-      <div className="flex sm:flex-col items-center sm:items-end justify-between sm:justify-center gap-4 sm:gap-3 pt-3 sm:pt-0 border-t sm:border-t-0 border-light-2/20 sm:border-none shrink-0">
-        <div className="flex items-center gap-4 sm:gap-3 text-dark-2/50">
-          <div className="flex items-center gap-1.5 text-[11px] hover:text-primary transition-colors">
-            <Heart className="w-3.5 h-3.5" />
-            <span>{data.likes}</span>
-          </div>
-          <div className="flex items-center gap-1.5 text-[11px] hover:text-primary transition-colors">
-            <MessageSquare className="w-3.5 h-3.5" />
-            <span>{data.comments}</span>
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

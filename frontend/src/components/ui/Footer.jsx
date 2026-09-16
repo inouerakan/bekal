@@ -1,5 +1,5 @@
 import { MapPin, Mail, Phone } from 'lucide-react'; // Hapus GraduationCap jika tidak dipakai lagi
-import logo from '../../../assets/images/logo.png';
+import logo from '../../assets/images/logo.png';
 
 export default function Footer() {
   return (
@@ -47,7 +47,7 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row flex-wrap gap-x-8 gap-y-10">
           
           {/* Column 1-3: About Us */}
-          <div className="min-w-[200px] max-w-xs">
+          <div className="min-w-50 max-w-xs">
             <h3 className="text-lg font-bold mb-4 text-light-1">About Us</h3>
             <p className="text-light-2 text-xs leading-relaxed">
               Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi blandit diam non magna pulvinar malesuada.
@@ -55,7 +55,7 @@ export default function Footer() {
           </div>
 
           {/* Column 4: Follow Us */}
-          <div className="min-w-[150px] max-w-xs">
+          <div className="min-w-37.5 max-w-xs">
             <h3 className="text-lg font-bold mb-4 text-light-1">Follow Us</h3>
             <ul className="flex flex-col gap-2 text-xs text-light-2">
               {['Instagram', 'Facebook', 'Twitter/X', 'Twitch'].map((social) => (
@@ -69,7 +69,7 @@ export default function Footer() {
           </div>
 
           {/* Column 5: Map Placeholder */}
-          <div className="w-full ml-auto md:w-64 lg:w-72 h-48 md:h-auto md:min-h-[200px] rounded-xl overflow-hidden border border-light-1/10 relative group shrink-0">
+          <div className="w-full ml-auto md:w-64 lg:w-72 h-48 md:h-auto md:min-h-50 rounded-xl overflow-hidden border border-light-1/10 relative group shrink-0">
             <div className="absolute inset-0 bg-light-2/10 flex items-center justify-center">
                <div className="text-center p-4">
                  <MapPin className="w-8 h-8 text-light-1/50 mx-auto mb-2" />
