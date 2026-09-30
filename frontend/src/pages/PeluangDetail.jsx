@@ -1,4 +1,6 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { apiFetch } from '../lib/api';
 import { 
   ArrowLeft, 
   Calendar, 
@@ -14,36 +16,22 @@ import {
   Share2
 } from 'lucide-react';
 
-// Mock data simulating the database structure from the image
-const mockDatabase = {
-  "1": {
-    id: 1,
-    category_id: 3,
-    category_name: "LOMBA",
-    title: "Software Development Competition",
-    organizer_name: "Himpunan Mahasiswa Komputer",
-    description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.",
-    requirements: "1. Siswa SMA/SMK Aktif\n2. Tim terdiri dari 2-3 orang\n3. Mengisi formulir pendaftaran online\n4. Melampirkan portofolio github (jika ada)",
-    education_level: "SMA / SMK Sederajat",
-    location: "Online / Jakarta",
-    cost: "Rp 50.000 / Tim",
-    registration_link: "https://example.com/register",
-    deadline: "2080-06-28T23:59:00",
-    status: "published",
-    rejection_reason: null,
-    submitted_by: 101,
-    verified_by: 1,
-    view_count: 1250,
-    created_at: "2026-08-01T10:00:00",
-    updated_at: "2026-08-02T14:30:00"
-  },
-};
-
 export default function OpportunityDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  
-  const data = mockDatabase[id] || mockDatabase["1"];
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoading(true);
+    apiFetch(`/api/opportunities/${id}`)
+      .then((result) => { if (!cancelled) setData(result.data); })
+      .catch((fetchError) => { if (!cancelled) setError(fetchError.message); })
+      .finally(() => { if (!cancelled) setIsLoading(false); });
+    return () => { cancelled = true; };
+  }, [id]);
 
   const formatDate = (dateString) => {
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
@@ -58,6 +46,7 @@ export default function OpportunityDetail() {
   const getStatusBadge = (status) => {
     switch(status) {
       case 'published':
+      case 'approved':
         return <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-green-100 text-green-700 text-xs font-bold"><CheckCircle2 size={12}/> Terverifikasi</span>;
       case 'pending':
         return <span className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-yellow-100 text-yellow-700 text-xs font-bold"><Clock size={12}/> Menunggu Verifikasi</span>;
@@ -67,6 +56,9 @@ export default function OpportunityDetail() {
         return null;
     }
   };
+
+  if (isLoading) return <div className="pt-24 text-center text-dark-2">Memuat detail peluang...</div>;
+  if (!data) return <div className="pt-24 text-center text-dark-2">{error || 'Peluang tidak ditemukan.'}</div>;
 
   return (
     // Wrapper Utama: pt-20 untuk memberi ruang Navbar Global, min-h-screen agar footer tidak naik jika konten sedikit
@@ -210,7 +202,7 @@ export default function OpportunityDetail() {
               </div>
 
               {/* Action Button */}
-              {data.status === 'published' ? (
+              {data.status === 'published' || data.status === 'approved' ? (
                 <a 
                   href={data.registration_link} 
                   target="_blank" 

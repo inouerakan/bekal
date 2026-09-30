@@ -1,22 +1,11 @@
 // src/pages/Forum.jsx
-import { useState } from 'react';
-import { MessageSquare, Search, Plus, ArrowRight, ChevronLeft, ChevronRight, Send } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
+import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import ForumCard from '../components/ui/ForumCard'; // Import komponen yang sudah dipisahkan
-
-// Data Dummy awal
-const initialDiscussions = [
-  { id: 1, title: 'Cara Lolos Esai Beasiswa LPDP untuk Pelajar SMA', author: 'Khaffa Daru', avatar: 'KD', content: 'Halo semuanya, aku mau sharing pengalaman kemarin saat apply beasiswa. Ternyata kunci utamanya ada di struktur esai...', likes: 24, comments: 12, time: '2 jam lalu' },
-  { id: 2, title: 'Tim untuk Lomba Hackathon Nasional 2026', author: 'Diaz Arqila', avatar: 'DA', content: 'Lagi cari 1 orang lagi buat tim hackathon bulan depan. Skill yang dibutuhkan: React.js dan Node.js. Minat DM ya!', likes: 8, comments: 5, time: '5 jam lalu' },
-  { id: 3, title: 'Review Magang di Startup Teknologi Jakarta', author: 'Derien Adelio', avatar: 'DR', content: 'Baru selesai magang 3 bulan di sini. Culture-nya enak banget, mentor suportif. Worth it buat yang mau belajar.', likes: 45, comments: 20, time: '1 hari lalu' },
-  { id: 4, title: 'Bedanya Beasiswa Prestasi dan Beasiswa Kurang Mampu?', author: 'Rakan Shaka', avatar: 'RS', content: 'Guys, ada yang tau gak sih bedanya syarat administrasi antara dua jenis beasiswa ini? Bingung mau apply yang mana.', likes: 3, comments: 8, time: '1 hari lalu' },
-  { id: 5, title: 'Template CV ATS Friendly untuk Pelajar', author: 'Muhammad Rafi', avatar: 'MR', content: 'Banyak yang nanya soal CV. Ini aku share template simpel yang pernah aku pakai buat daftar magang dan lolos.', likes: 102, comments: 34, time: '2 hari lalu' },
-  { id: 6, title: 'Persiapan Olimpiade Sains Nasional (OSN)', author: 'Reindy Alfriza', avatar: 'RA', content: 'Ada yang sama-sama persiapan OSN Komputer gak? Mari saling share sumber belajar dan latihan soal di sini.', likes: 15, comments: 7, time: '3 hari lalu' },
-  { id: 7, title: 'Tips Wawancara Magang bagi Pemula', author: 'Khaffa Daru', avatar: 'KD', content: 'Nervous mau interview pertama? Tenang, ini tips dari pengalamanku di 3 perusahaan berbeda...', likes: 30, comments: 10, time: '4 hari lalu' },
-  { id: 8, title: 'Rekomendasi Laptop untuk Anak Teknik', author: 'Diaz Arqila', avatar: 'DA', content: 'Budget 10 juta dapet apa ya yang kuat buat coding dan render ringan? Mohon sarannya suhu.', likes: 12, comments: 25, time: '5 hari lalu' },
-];
+import { apiFetch } from '../lib/api';
 
 export default function Forum() {
-  const [discussions, setDiscussions] = useState(initialDiscussions);
+  const [discussions, setDiscussions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
@@ -27,13 +16,34 @@ export default function Forum() {
   // State untuk Form Input
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadDiscussions = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const params = new URLSearchParams({ limit: '100', search: searchQuery });
+      const result = await apiFetch(`/api/forum?${params}`);
+      setDiscussions((result.data || []).map((post) => ({
+        ...post,
+        author: post.user_name || 'Pengguna',
+        avatar: (post.user_name || 'P').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
+        likes: post.like_count || 0,
+        comments: post.comment_count || 0,
+        time: post.created_at ? new Date(post.created_at).toLocaleDateString('id-ID') : '',
+      })));
+      setError('');
+    } catch (fetchError) {
+      setError(fetchError.message);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchQuery]);
+
+  useEffect(() => { loadDiscussions(); }, [loadDiscussions]);
 
   // Logika Search
-  const filteredData = discussions.filter(item => 
-    item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    item.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    item.author.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredData = discussions;
 
   // Logika Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
@@ -52,26 +62,22 @@ export default function Forum() {
   const goToPrevPage = () => setCurrentPage(prev => Math.max(prev - 1, 1));
 
   // Fungsi Handle Submit Form
-  const handleSubmitDiscussion = (e) => {
+  const handleSubmitDiscussion = async (e) => {
     e.preventDefault();
     if (!newTitle.trim() || !newContent.trim()) return;
-
-    const newDiscussion = {
-      id: discussions.length + 1,
-      title: newTitle,
-      author: 'Anda (User)',
-      avatar: 'ME',
-      content: newContent,
-      likes: 0,
-      comments: 0,
-      time: 'Baru saja'
-    };
-
-    setDiscussions([newDiscussion, ...discussions]);
-    setNewTitle('');
-    setNewContent('');
-    setIsModalOpen(false);
-    setCurrentPage(1);
+    try {
+      await apiFetch('/api/forum/discussion', {
+        method: 'POST',
+        body: JSON.stringify({ title: newTitle, content: newContent }),
+      });
+      setNewTitle('');
+      setNewContent('');
+      setIsModalOpen(false);
+      setCurrentPage(1);
+      await loadDiscussions();
+    } catch (submitError) {
+      setError(submitError.message);
+    }
   };
 
   return (
@@ -119,12 +125,14 @@ export default function Forum() {
         </div>
 
         {/* === MAIN CONTENT: LIST DISCUSSIONS === */}
+        {error && <p role="alert" className="text-center text-sm text-red-600">{error}</p>}
         <div className="flex flex-col gap-4 min-h-100">
-          {currentDiscussions.length > 0 ? (
+          {isLoading ? <p className="text-center text-sm text-dark-2">Memuat diskusi...</p> : null}
+          {!isLoading && currentDiscussions.length > 0 ? (
             currentDiscussions.map((item) => (
               <ForumCard key={item.id} data={item} />
             ))
-          ) : (
+          ) : !isLoading ? (
             <div className="flex flex-col items-center justify-center py-20 text-center bg-white rounded-2xl border border-dashed border-light-2">
               <div className="w-12 h-12 bg-light-1 rounded-full flex items-center justify-center mb-3">
                 <Search className="w-6 h-6 text-dark-2/20" />
@@ -132,7 +140,7 @@ export default function Forum() {
               <h3 className="text-dark-1 font-bold text-sm">Tidak ada diskusi ditemukan</h3>
               <p className="text-dark-2 text-xs mt-1">Coba kata kunci lain.</p>
             </div>
-          )}
+          ) : null}
         </div>
 
         {/* === PAGINATION CONTROLS === */}

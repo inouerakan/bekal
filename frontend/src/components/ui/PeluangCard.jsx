@@ -20,7 +20,7 @@ export default function PeluangCard({ data }) {
       <div>
         {/* Category Label */}
         <span className="inline-block px-2.5 py-1 bg-light-2/10 text-dark-2 text-[10px] uppercase tracking-wider font-semibold rounded-md mb-4 border border-light-2/20">
-          {data.category}
+          {data.category || data.category_name || 'Peluang'}
         </span>
 
         {/* Title */}
@@ -31,7 +31,7 @@ export default function PeluangCard({ data }) {
         {/* Organizer */}
         <p className="text-dark-2 text-xs font-medium mb-4 flex items-center gap-1.5">
            <span className="w-1 h-1 rounded-full bg-primary inline-block"></span>
-           {data.organizer}
+           {data.organizer || data.organizer_name}
         </p>
 
         {/* Description */}
@@ -45,16 +45,16 @@ export default function PeluangCard({ data }) {
         <div className="flex justify-between items-center mb-4">
           <div className="flex items-center gap-1.5 text-dark-2 text-[10px] font-medium">
             <Calendar className="w-3 h-3" />
-            {data.date}
+            {data.date || (data.deadline ? new Date(data.deadline).toLocaleDateString('id-ID') : '-')}
           </div>
           
           {/* Badge Harga */}
           <span className={`text-[10px] font-bold px-2 py-0.5 rounded ${
-            data.isPaid 
+            data.isPaid || (data.cost && !String(data.cost).toLowerCase().includes('gratis'))
               ? 'bg-light-2/10 text-dark-1' 
               : 'bg-light-2/10 text-primary'
           }`}>
-            {data.price}
+            {data.price || data.cost || 'Gratis'}
           </span>
         </div>
 

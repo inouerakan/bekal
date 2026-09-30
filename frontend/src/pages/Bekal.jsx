@@ -1,11 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, X, ChevronDown, UploadCloud } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
+import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import PeluangCard from '../components/ui/PeluangCard'; // Pastikan path import sesuai
 import { apiFetch } from '../lib/api';
 
 export default function Bekal() {
+  const [searchParams] = useSearchParams();
   const [opportunities, setOpportunities] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [categories, setCategories] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(() => searchParams.get('search') || '');
   const [activeFilter, setActiveFilter] = useState('Semua');
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -14,7 +17,7 @@ export default function Bekal() {
   const itemsPerPage = 6; 
 
   // State Modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('compose') === '1');
   
   // State Form
   const [formData, setFormData] = useState({
@@ -26,16 +29,38 @@ export default function Bekal() {
     deadline: ''
   });
 
-  const filters = ['Semua', 'Beasiswa', 'Karir & Magang', 'Lomba'];
+  const filters = ['Semua', ...categories.map((category) => category.name)];
+
+  useEffect(() => {
+    apiFetch('/api/categories')
+      .then((result) => {
+        const availableCategories = result.data || [];
+        setCategories(availableCategories);
+        setFormData((current) => availableCategories.some((category) => category.name === current.category)
+          ? current
+          : { ...current, category: availableCategories[0]?.name || '' });
+      })
+      .catch((fetchError) => setError(fetchError.message));
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
     setIsLoading(true);
-    apiFetch(`/api/opportunities?page=${currentPage}&limit=${itemsPerPage}&category=${encodeURIComponent(activeFilter)}&search=${encodeURIComponent(searchQuery)}`)
+    const selectedCategory = categories.find((category) =>
+      category.name.toLowerCase().includes(activeFilter.toLowerCase())
+    );
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(itemsPerPage),
+      search: searchQuery,
+    });
+    if (activeFilter !== 'Semua' && selectedCategory) params.set('category_id', selectedCategory.id);
+    apiFetch(`/api/opportunities?${params}`)
       .then((result) => {
         if (!cancelled) {
           setOpportunities(result.data || []);
-          setTotalPages(result.totalPages || 1);
+          setTotalPages(result.pagination?.totalPages || 1);
+          setError('');
         }
       })
       .catch((fetchError) => {
@@ -45,7 +70,7 @@ export default function Bekal() {
         if (!cancelled) setIsLoading(false);
       });
     return () => { cancelled = true; };
-  }, [activeFilter, currentPage, searchQuery]);
+  }, [activeFilter, currentPage, searchQuery, categories]);
   
   const handleFilterChange = (filter) => {
     setActiveFilter(filter);
@@ -73,9 +98,20 @@ export default function Bekal() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await apiFetch('/api/opportunities', { method: 'POST', body: JSON.stringify(formData) });
+      const selectedCategory = categories.find((category) => category.name === formData.category) || categories[0];
+      if (!selectedCategory) throw new Error('Kategori belum tersedia. Muat ulang halaman dan coba lagi.');
+      await apiFetch('/api/opportunities', { method: 'POST', body: JSON.stringify({
+        category_id: selectedCategory.id,
+        title: formData.title,
+        organizer_name: formData.organizer,
+        description: formData.description,
+        education_level: 'Umum',
+        location: 'Online',
+        cost: formData.price || 'Gratis',
+        deadline: formData.deadline,
+      }) });
       setIsModalOpen(false);
-      setFormData({ category: 'Beasiswa Pendidikan', title: '', organizer: '', description: '', price: '', deadline: '' });
+      setFormData({ category: selectedCategory.name, title: '', organizer: '', description: '', price: '', deadline: '' });
       setCurrentPage(1);
       setError('');
     } catch (submitError) {
@@ -119,7 +155,7 @@ export default function Bekal() {
 
           {/* Filter Tabs */}
           <div className="flex flex-wrap justify-center gap-2 pt-2">
-            {filters.map((filter) => (
+                  {filters.map((filter) => (
               <button
                 key={filter}
                 onClick={() => handleFilterChange(filter)}
@@ -245,10 +281,7 @@ export default function Bekal() {
                       onChange={handleInputChange}
                       className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-sm text-dark-1 appearance-none focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all border-none shadow-inner cursor-pointer"
                     >
-                      <option>Beasiswa Pendidikan</option>
-                      <option>Lomba Kompetensi</option>
-                      <option>Karir & Magang</option>
-                      <option>Penawaran Jasa / Keahlian</option>
+                      {categories.map((category) => <option key={category.id} value={category.name}>{category.name}</option>)}
                     </select>
                     <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-dark-2/50 pointer-events-none" />
                   </div>
@@ -313,10 +346,11 @@ export default function Bekal() {
                 <div className="space-y-1.5">
                   <label className="text-dark-1 font-bold text-xs block">Batas Waktu (Deadline Hari Sisa)</label>
                   <input 
-                    type="text" 
+                    type="date" 
                     name="deadline"
                     value={formData.deadline}
                     onChange={handleInputChange}
+                    required
                     placeholder="11 September 2080..." 
                     className="w-full bg-gray-100 rounded-xl px-4 py-2.5 text-sm text-dark-1 placeholder:text-dark-2/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all border-none shadow-inner"
                   />

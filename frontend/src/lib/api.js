@@ -11,10 +11,15 @@ export async function apiFetch(path, options = {}) {
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    ...options,
-    headers,
-  });
+  let response;
+  try {
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...options,
+      headers,
+    });
+  } catch {
+    throw new Error('Backend tidak dapat dijangkau. Pastikan server backend berjalan.');
+  }
   const payload = await response.json().catch(() => ({}));
 
   if (!response.ok) {
@@ -23,9 +28,20 @@ export async function apiFetch(path, options = {}) {
   return payload;
 }
 
-export function saveSession({ token, user }) {
-  localStorage.setItem('bekal_token', token);
-  localStorage.setItem('bekal_user', JSON.stringify(user));
+export function saveSession(response = {}) {
+  const session = response.data || response;
+  const { token, user } = session;
+  const sessionToken = token;
+  const sessionUser = session.user || user || (session.id ? {
+    id: session.id,
+    full_name: session.full_name,
+    email: session.email,
+    role: session.role,
+    is_verified: session.is_verified,
+  } : null);
+  if (!sessionToken) throw new Error('Token login tidak ditemukan dari backend');
+  localStorage.setItem('bekal_token', sessionToken);
+  localStorage.setItem('bekal_user', JSON.stringify(sessionUser));
   window.dispatchEvent(new Event('bekal-auth-change'));
 }
 

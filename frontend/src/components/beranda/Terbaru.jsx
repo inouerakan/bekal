@@ -1,54 +1,17 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PeluangCard from '../ui/PeluangCard'; // Sesuaikan path import
-
-const opportunities = [
-  {
-    id: 1, category: 'Beasiswa', title: 'Beasiswa Prestasi Bakti Digital SMK',
-    organizer: 'Yayasan Teknologi Indonesia',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Gratis', isPaid: false
-  },
-  {
-    id: 2, category: 'Lomba', title: 'Software Development Competition',
-    organizer: 'Himpunan Mahasiswa Komputer',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Rp 50.000 / Tim', isPaid: true
-  },
-  {
-    id: 3, category: 'Karir & Magang', title: 'Junior Web Developer (Magang PKL)',
-    organizer: 'Yayasan Teknologi Indonesia',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Gratis', isPaid: false
-  },
-  {
-    id: 4, category: 'Karir & Magang', title: 'Junior Web Developer (Magang PKL)',
-    organizer: 'Yayasan Teknologi Indonesia',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Gratis', isPaid: false
-  },
-  {
-    id: 5, category: 'Karir & Magang', title: 'Junior Web Developer (Magang PKL)',
-    organizer: 'Yayasan Teknologi Indonesia',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Gratis', isPaid: false
-  },
-  {
-    id: 6, category: 'Karir & Magang', title: 'Junior Web Developer (Magang PKL)',
-    organizer: 'Yayasan Teknologi Indonesia',
-    description: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.',
-    date: '28 Juni 2080', price: 'Gratis', isPaid: false
-  }
-];
+import { apiFetch } from '../../lib/api';
 
 export default function Terbaru() {
-  const [activeFilter, setActiveFilter] = useState('Semua');
+  const [opportunities, setOpportunities] = useState([]);
+  const [error, setError] = useState('');
 
-  const filteredData = activeFilter === 'Semua' 
-    ? opportunities 
-    : opportunities.filter(item => item.category.includes(activeFilter));
-
-  const filters = ['Semua', 'Beasiswa', 'Karir & Magang', 'Lomba'];
+  useEffect(() => {
+    apiFetch('/api/opportunities?page=1&limit=3&sort=newest')
+      .then((result) => setOpportunities(result.data || []))
+      .catch((fetchError) => setError(fetchError.message));
+  }, []);
 
   return (
     // 1. Full Screen Container dengan Flex Centering
@@ -88,9 +51,10 @@ export default function Terbaru() {
 
         {/* Grid Cards Loop - Terlimit 3 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredData.slice(0, 3).map((item) => (
+          {opportunities.slice(0, 3).map((item) => (
             <PeluangCard key={item.id} data={item} />
           ))}
+          {!opportunities.length && <p className="col-span-full text-center text-sm text-dark-2">{error || 'Belum ada peluang tersedia.'}</p>}
         </div>
 
         <div className='self-center'>

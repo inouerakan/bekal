@@ -1,12 +1,24 @@
 // Navbar.jsx
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, X } from 'lucide-react'; // Hapus Search & Bell dari import
 import logo from '../../assets/images/logo_blue.png';
+import { clearSession, getStoredUser } from '../../lib/api';
 
 export default function Navbar() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState(() => getStoredUser());
   const location = useLocation();
+
+  useEffect(() => {
+    const syncUser = () => setUser(getStoredUser());
+    window.addEventListener('bekal-auth-change', syncUser);
+    window.addEventListener('storage', syncUser);
+    return () => {
+      window.removeEventListener('bekal-auth-change', syncUser);
+      window.removeEventListener('storage', syncUser);
+    };
+  }, []);
 
   // Helper untuk cek apakah link sedang aktif
   const isActive = (path) => location.pathname === path;
@@ -53,6 +65,10 @@ export default function Navbar() {
           
           {/* Auth Buttons */}
           <div className="hidden md:flex items-center gap-2">
+            {user ? <>
+              <span className="text-xs text-dark-1">{user.full_name || user.email}</span>
+              <button onClick={clearSession} className="px-4 py-1.5 text-xs font-semibold rounded-full bg-dark-1 text-light-1 hover:bg-primary">Keluar</button>
+            </> : <>
             <Link 
               to="/login" 
               className={`px-4 py-1.5 text-xs font-semibold rounded-full shadow-sm transition-colors ${
@@ -71,6 +87,7 @@ export default function Navbar() {
             >
               Register
             </Link>
+            </>}
           </div>
 
           {/* Mobile Toggle */}
@@ -98,6 +115,10 @@ export default function Navbar() {
           ))}
           <div className="h-px bg-light-2/20 my-2"></div>
           <div className="flex flex-col gap-2">
+            {user ? <>
+              <span className="px-4 py-2 text-sm text-center text-dark-1">{user.full_name || user.email}</span>
+              <button onClick={() => { clearSession(); setIsMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium bg-dark-1 text-light-1 text-center">Keluar</button>
+            </> : <>
             <Link 
               to="/login" 
               className="px-4 py-3 rounded-xl text-sm font-medium text-dark-1 text-center border border-light-2/20"
@@ -112,6 +133,7 @@ export default function Navbar() {
             >
               Register
             </Link>
+            </>}
           </div>
         </div>
       )}

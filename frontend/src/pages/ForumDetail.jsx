@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from 'react-router-dom';
+import { useCallback, useEffect, useState } from 'react';
 import { 
   ArrowLeft, 
   Heart, 
@@ -9,7 +10,7 @@ import {
   Share2,
   Bookmark
 } from 'lucide-react';
-import { useState } from 'react';
+import { apiFetch } from '../lib/api';
 
 // Mock data simulating the database structure: bekal_db_forum
 const mockForumDatabase = {
@@ -72,9 +73,36 @@ export default function ForumDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [newComment, setNewComment] = useState("");
-  
-  // In real app, fetch data based on ID
-  const data = mockForumDatabase[id] || mockForumDatabase["1"];
+  const [data, setData] = useState(null);
+  const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
+
+  const loadPost = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const result = await apiFetch(`/api/forum/${id}`);
+      const post = result.data;
+      const toInitials = (name) => (name || 'P').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase();
+      setData({
+        ...post,
+        author_name: post.user_name || 'Pengguna',
+        author_initials: toInitials(post.user_name),
+        comments: (post.comments || []).map((comment) => ({
+          ...comment,
+          author_name: comment.user_name || 'Pengguna',
+          author_initials: toInitials(comment.user_name),
+        })),
+      });
+      setError('');
+    } catch (fetchError) {
+      setError(fetchError.message);
+      setData(null);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { loadPost(); }, [loadPost]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -86,22 +114,37 @@ export default function ForumDetail() {
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
-  const handleLike = () => {
-    // Logic to toggle like would go here
-    console.log("Liked post");
+  const handleLike = async () => {
+    try {
+      const result = await apiFetch(`/api/forum/${id}/like`, { method: 'POST' });
+      setData((current) => ({ ...current, like_count: result.data.like_count }));
+    } catch (actionError) {
+      setError(actionError.message);
+    }
   };
 
-  const handleCommentSubmit = (e) => {
+  const handleCommentSubmit = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
-    console.log("Submitting comment:", newComment);
-    setNewComment("");
-    // Add logic to append comment to list
+    try {
+      await apiFetch(`/api/forum/${id}/comment`, {
+        method: 'POST',
+        body: JSON.stringify({ content: newComment }),
+      });
+      setNewComment('');
+      await loadPost();
+    } catch (actionError) {
+      setError(actionError.message);
+    }
   };
+
+  if (isLoading) return <div className="pt-24 text-center text-dark-2">Memuat diskusi...</div>;
+  if (!data) return <div className="pt-24 text-center text-dark-2">{error || 'Diskusi tidak ditemukan.'}</div>;
 
   return (
     <div className="pt-20 min-h-screen bg-light-1 pb-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
+        {error && <p role="alert" className="mb-4 text-center text-sm text-red-600">{error}</p>}
         
         {/* Main Post Card */}
         <div className="bg-white rounded-2xl border border-light-2 shadow-sm overflow-hidden relative mb-6">
