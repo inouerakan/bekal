@@ -1,0 +1,97 @@
+# ==========================================
+# Dependencies & Package Managers
+# ==========================================
+node_modules/
+jspm_packages/
+web_modules/
+.npm/
+.eslintcache
+yarn-error.log
+pnpm-debug.log
+
+# ==========================================
+# React Frontend (Production Builds & Tools)
+# ==========================================
+# Production build outputs
+dist/
+build/
+out/
+
+# Vite or Create React App cache directories
+.vite/
+.turbo/
+.next/
+.server/
+.client/
+
+# Testing coverages
+coverage/
+*.lcov
+
+# ==========================================
+# Express Backend & Node Runtime
+# ==========================================
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Runtime and process managers
+pids
+*.pid
+*.seed
+*.pid.lock
+.pm2/
+
+# TypeScript compilation output (if using TS on backend)
+lib/
+
+# ==========================================
+# Environment Variables & Secrets (CRITICAL)
+# ==========================================
+# Never commit credentials to version control
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# Serverless development secrets
+.serverless/
+
+# ==========================================
+# IDEs, Editors & OS Specific Files
+# ==========================================
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/
+
+# WebStorm / IntelliJ IDEA
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# macOS Operating System artifacts
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.Trashes
+
+# Windows Operating System artifacts
+Thumbs.db
+ehthumbs.db
+Desktop.ini

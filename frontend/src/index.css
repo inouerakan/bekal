@@ -1,19 +1,31 @@
 @import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,opsz,wght@0,6..12,200..1000;1,6..12,200..1000&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 @theme {
-    /* Colors */
     --color-primary: oklch(39.1% 0.09 240.876);
-    --color-light-1: oklch(98.5% 0 none);
-    --color-light-2: oklch(87% 0 none);
-    --color-dark-1: oklch(14.5% 0 none);
-    --color-dark-2: oklch(26.9% 0 none);
-    
-    /* Font */
-    /* --font-sans: "Nunito Sans"; */
-    
-    /* Fluid Typography - Mobile First */
-    /* Format: clamp(minimum, preferred, maximum) */
+    --color-secondary: oklch(50% 0.1 240);
+
+    --color-bg-body: oklch(98.5% 0 none);
+    --color-bg-card: oklch(100% 0 none);
+    --color-border-subtle: oklch(90% 0 none);
+
+    --color-text-main: oklch(14.5% 0 none);
+    --color-text-muted: oklch(45% 0 none);
+
+    --color-surface: var(--color-bg-card);
+    --color-accent: var(--color-primary);
+    --color-on-dark: oklch(98.5% 0 none);
+    --color-sidebar: oklch(14.5% 0 none);
+
+    --color-light-1: var(--color-bg-body);
+    --color-light-2: var(--color-border-subtle);
+    --color-dark-1: var(--color-text-main);
+    --color-dark-2: var(--color-text-muted);
+
+    --font-sans: "Nunito Sans", sans-serif;
+
     --text-xs: clamp(0.75rem, 0.7rem + 0.25vw, 0.875rem);
     --text-sm: clamp(0.875rem, 0.8rem + 0.375vw, 1rem);
     --text-base: clamp(1rem, 0.95rem + 0.25vw, 1.125rem);
@@ -22,9 +34,32 @@
     --text-2xl: clamp(1.5rem, 1.3rem + 1vw, 2rem);
     --text-3xl: clamp(1.875rem, 1.5rem + 1.875vw, 2.5rem);
     --text-4xl: clamp(2.25rem, 1.8rem + 2.25vw, 3rem);
-    --text-5xl: clamp(3rem, 2.5rem + 2.5vw, 4rem);
-    --text-6xl: clamp(3.75rem, 3rem + 3.75vw, 5rem);
-    --text-7xl: clamp(4.5rem, 3.5rem + 5vw, 6rem);
-    --text-8xl: clamp(6rem, 4.5rem + 7.5vw, 8rem);
-    --text-9xl: clamp(8rem, 6rem + 10vw, 10rem);
+}
+
+.dark {
+    --color-bg-body: oklch(25% 0.02 240.876);
+    --color-bg-card: oklch(29% 0.022 240.876);
+    --color-border-subtle: oklch(38% 0.024 240.876);
+
+    --color-text-main: oklch(95% 0.008 240.876);
+    --color-text-muted: oklch(76% 0.015 240.876);
+
+    --color-primary: oklch(39.1% 0.09 240.876);
+    --color-secondary: oklch(50% 0.1 240);
+
+    --color-surface: var(--color-bg-card);
+    --color-accent: oklch(72% 0.09 240.876);
+    --color-sidebar: oklch(20% 0.02 240.876);
+
+    --color-light-1: var(--color-bg-body);
+    --color-light-2: var(--color-border-subtle);
+    --color-dark-1: var(--color-text-main);
+    --color-dark-2: var(--color-text-muted);
+}
+
+@layer base {
+    body {
+        background-color: var(--color-bg-body);
+        color: var(--color-text-main);
+    }
 }
