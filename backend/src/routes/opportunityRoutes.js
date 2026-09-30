@@ -1,9 +1,14 @@
-const express = require('express');
-const router = express.Router();
-const { getOpportunities, createOpportunity } = require('../controller/opportunityController');
-const { protect } = require('../middleware/auth');
+const express = require('express')
+const router = express.Router()
+const opportunityController = require('../controller/opportunityController')
+const { authenticate, authorize, optionalAuth } = require('../middleware/auth')
 
-router.get('/', getOpportunities);
-router.post('/', protect, createOpportunity);
+router.get('/', optionalAuth, opportunityController.getAll)
+router.get('/:id', optionalAuth, opportunityController.getById)
+router.post('/', authenticate, opportunityController.create)
+router.put('/:id', authenticate, opportunityController.update)
+router.delete('/:id', authenticate, opportunityController.delete)
+router.get('/my-opportunities', authenticate, opportunityController.getMyOpportunities)
+router.patch('/:id/verify', authenticate, authorize('admin'), opportunityController.verify)
 
 module.exports = router;
