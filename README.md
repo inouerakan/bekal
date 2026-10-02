@@ -1,8 +1,3 @@
-Berikut adalah draf `README.md` lengkap yang mencakup instruksi setup dari awal hingga proyek bisa dijalankan, disesuaikan dengan struktur file dan dependensi yang Anda berikan.
-
-Silakan simpan kode di bawah ini sebagai file `README.md` di root folder proyek Anda.
-
-```markdown
 # Bekal Opat - Platform Informasi Peluang Pelajar
 
 Bekal Opat adalah platform web yang menyediakan informasi terverifikasi mengenai beasiswa, lomba, magang, dan peluang karir lainnya untuk pelajar di Indonesia. Proyek ini dibangun menggunakan React (Vite) untuk frontend dan Express.js untuk backend.
@@ -35,7 +30,6 @@ Buka terminal/command prompt dan jalankan perintah:
 ```bash
 git clone <url-repository-anda>
 cd bekal-opat
-```
 
 ### 2. Setup Database
 
