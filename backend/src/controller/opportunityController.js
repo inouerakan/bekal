@@ -9,7 +9,7 @@ exports.getAll = async (req, res, next) => {
     const offset = (page - 1) * limit;
     const { category_id, education_level, location, search, sort } = req.query;
 
-    let whereClause = "WHERE o.status = 'approved'";
+    let whereClause = "WHERE o.status = 'approved' AND (o.deadline IS NULL OR o.deadline >= CURDATE())";
     const params = [];
 
     if (category_id) {
@@ -167,37 +167,49 @@ exports.create = [
   body('category_id').isInt().withMessage('Category ID harus berupa angka'),
   body('organizer_name').trim().notEmpty().withMessage('Nama penyelenggara wajib diisi'),
   body('description').trim().notEmpty().withMessage('Deskripsi wajib diisi'),
+  body('image_url').optional({ values: 'falsy' }).trim().isURL().withMessage('URL gambar tidak valid'),
   body('requirements').optional().trim(),
-  body('education_level').optional().trim(),
+  body('education_level').optional({ values: 'falsy' })
+    .isIn(['SMA/SMK', 'D3', 'S1', 'S2', 'Umum']).withMessage('Jenjang pendidikan tidak valid'),
   body('location').optional().trim(),
   body('cost').optional().trim(),
-  body('registration_link').optional().isURL().withMessage('Link registrasi tidak valid'),
+  body('registration_link').optional({ values: 'falsy' }).isURL().withMessage('Link registrasi tidak valid'),
   body('deadline').isISO8601().withMessage('Deadline tidak valid'),
   validate,
   async (req, res, next) => {
     try {
-      if (!req.user || !['admin', 'guru_BK'].includes(req.user.role)) {
-        return res.status(403).json({ 
-          success: false, 
-          message: 'Akses ditolak. Hanya Admin dan Guru BK yang dapat mengajukan informasi baru.' 
+      if (!req.user || !['admin', 'guru_BK', 'mitra'].includes(req.user.role)) {
+        return res.status(403).json({
+          success: false,
+          message: 'Akses ditolak.'
         });
       }
-
-      const { 
-        title, category_id, organizer_name, description, requirements, 
-        education_level, location, cost, registration_link, deadline 
+      if (req.user.role === 'mitra') {
+        const [partners] = await db.query(
+          'SELECT id FROM bekal_db_partners WHERE user_id = ? AND is_verified_partner = 1 LIMIT 1',
+          [req.user.id]
+        );
+        if (partners.length === 0) {
+          return res.status(403).json({
+            success: false,
+            message: 'Akun mitra Anda belum diverifikasi.'
+          });
+        }
+      }
+      const {
+        title, category_id, organizer_name, description, image_url, requirements,
+        education_level, location, cost, registration_link, deadline
       } = req.body;
-
       const [result] = await db.query(
-        `INSERT INTO bekal_db_opportunities 
-         (category_id, title, organizer_name, description, requirements, 
-          education_level, location, cost, registration_link, deadline, 
+        `INSERT INTO bekal_db_opportunities
+         (category_id, title, organizer_name, description, image_url, requirements,
+          education_level, location, cost, registration_link, deadline,
           submitted_by, status, view_count, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, NOW(), NOW())`,
-        [category_id, title, organizer_name, description, requirements || null,
-         education_level, location, cost || null, registration_link || null, deadline, req.user.id]
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, NOW(), NOW())`,
+        [category_id, title, organizer_name, description, image_url || null, requirements || null,
+         education_level || 'Umum', location || null, cost || null,
+         registration_link || null, deadline, req.user.id]
       );
-
       res.status(201).json({
         success: true,
         message: 'Opportunity berhasil dibuat, menunggu verifikasi',

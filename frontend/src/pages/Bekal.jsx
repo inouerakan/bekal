@@ -4,6 +4,7 @@ import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight } from 'lucide-reac
 import PeluangCard from '../components/ui/PeluangCard';
 import OpportunityModal from '../components/ui/OpportunityModal';
 import { apiFetch, getStoredUser } from '../lib/api';
+import { refreshSession } from '../lib/session';
 
 export default function Bekal() {
   const [searchParams] = useSearchParams();
@@ -19,8 +20,23 @@ export default function Bekal() {
 
   const [isModalOpen, setIsModalOpen] = useState(() => searchParams.get('compose') === '1');
 
-  const user = getStoredUser();
-  const canSubmit = user && ['admin', 'guru_BK'].includes(user.role);
+  const [user, setUser] = useState(() => getStoredUser());
+  const canSubmit = Boolean(user) && ['admin', 'guru_BK', 'mitra'].includes(user.role);
+
+  useEffect(() => {
+    let cancelled = false;
+    const syncUser = () => setUser(getStoredUser());
+
+    refreshSession().then((freshUser) => {
+      if (!cancelled) setUser(freshUser);
+    });
+
+    window.addEventListener('bekal-auth-change', syncUser);
+    return () => {
+      cancelled = true;
+      window.removeEventListener('bekal-auth-change', syncUser);
+    };
+  }, []);
 
   const filters = ['Semua', ...categories.map((category) => category.name)];
 

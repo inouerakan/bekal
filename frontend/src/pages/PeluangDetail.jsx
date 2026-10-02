@@ -13,7 +13,8 @@ import {
   User,
   Clock,
   FileText,
-  Share2
+  Share2,
+  Image as ImageIcon
 } from 'lucide-react';
 
 export default function OpportunityDetail() {
@@ -57,58 +58,72 @@ export default function OpportunityDetail() {
     }
   };
 
-  if (isLoading) return <div className="pt-24 text-center text-dark-2">Memuat detail peluang...</div>;
-  if (!data) return <div className="pt-24 text-center text-dark-2">{error || 'Peluang tidak ditemukan.'}</div>;
+  if (isLoading) return <div className="pt-28 min-h-screen flex items-center justify-center bg-light-1"><div className="text-dark-2">Memuat detail peluang...</div></div>;
+  if (!data) return <div className="pt-28 min-h-screen flex items-center justify-center bg-light-1"><div className="text-dark-2">{error || 'Peluang tidak ditemukan.'}</div></div>;
 
   return (
-    <div className="pt-20 min-h-screen bg-light-1 pb-12">
-
+    <div className="pt-28 min-h-screen bg-light-1 pb-12">
       <div className="max-w-5xl mx-auto px-4 sm:px-6">
-
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
-
+          
           <div className="lg:col-span-2 space-y-6">
+            <div className="bg-surface rounded-2xl border border-light-2 shadow-sm relative overflow-hidden">
+              
+              {data.image_url ? (
+                <div className="relative w-full h-48 md:h-64 bg-light-2 overflow-hidden">
+                  <img 
+                    src={data.image_url} 
+                    alt={data.title} 
+                    className="w-full h-full object-cover"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent pointer-events-none"></div>
+                </div>
+              ) : (
+                <div className="w-full h-32 bg-light-2/50 flex items-center justify-center border-b border-light-2/50">
+                  <ImageIcon className="w-8 h-8 text-dark-2/20" />
+                </div>
+              )}
 
-            <div className="bg-surface p-6 md:p-8 rounded-2xl border border-light-2 shadow-sm relative overflow-hidden">
+              <div className="p-6 md:p-8 relative">
+                <button
+                  onClick={() => navigate(-1)}
+                  className="absolute top-4 left-4 p-2 rounded-full bg-light-1/80 backdrop-blur-sm hover:bg-primary/10 text-dark-2 hover:text-accent transition-all duration-200 group z-10 border border-light-2/50 shadow-sm"
+                  title="Kembali"
+                >
+                  <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
+                </button>
 
-              <button
-                onClick={() => navigate(-1)}
-                className="absolute top-4 left-4 p-2 rounded-full bg-light-1 hover:bg-primary/10 text-dark-2 hover:text-accent transition-all duration-200 group z-10 border border-light-2/50"
-                title="Kembali"
-              >
-                <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
-              </button>
-
-              <div className="absolute top-4 right-4 text-[10px] text-dark-2 flex items-center gap-1 bg-light-1 px-2.5 py-1 rounded-full border border-light-2/50">
-                <Eye size={12} />
-                <span className="font-medium">{data.view_count}</span>
-              </div>
-
-              <div className="mt-8 mb-4">
-                <div className="flex flex-wrap items-center gap-3 mb-4">
-                  <span className="px-2.5 py-1 bg-primary/10 text-accent text-[10px] uppercase tracking-wider font-bold rounded-md border border-primary/20">
-                    {data.category_name}
-                  </span>
-                  {getStatusBadge(data.status)}
+                <div className="absolute top-4 right-4 text-[10px] text-dark-2 flex items-center gap-1 bg-light-1/80 backdrop-blur-sm px-2.5 py-1 rounded-full border border-light-2/50 shadow-sm">
+                  <Eye size={12} />
+                  <span className="font-medium">{data.view_count}</span>
                 </div>
 
-                <h1 className="text-2xl md:text-3xl font-bold text-dark-1 mb-3 leading-tight pr-8">
-                  {data.title}
-                </h1>
+                <div className="mt-2 mb-4">
+                  <div className="flex flex-wrap items-center gap-3 mb-4">
+                    <span className="px-2.5 py-1 bg-primary/10 text-accent text-[10px] uppercase tracking-wider font-bold rounded-md border border-primary/20">
+                      {data.category_name}
+                    </span>
+                    {getStatusBadge(data.status)}
+                  </div>
 
-                <div className="flex items-center gap-2 text-dark-2 text-sm font-medium">
-                  <span className="w-2 h-2 rounded-full bg-primary"></span>
-                  {data.organizer_name}
+                  <h1 className="text-2xl md:text-3xl font-bold text-dark-1 mb-3 leading-tight pr-8">
+                    {data.title}
+                  </h1>
+
+                  <div className="flex items-center gap-2 text-dark-2 text-sm font-medium">
+                    <span className="w-2 h-2 rounded-full bg-primary"></span>
+                    {data.organizer_name}
+                  </div>
                 </div>
-              </div>
 
-              <div className="border-t border-light-2/50 my-6"></div>
+                <div className="border-t border-light-2/50 my-6"></div>
 
-              <div className="prose prose-sm max-w-none text-dark-2 leading-relaxed">
-                <h3 className="text-dark-1 font-bold text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
-                  Deskripsi
-                </h3>
-                <p className="whitespace-pre-line text-justify text-sm md:text-base">{data.description}</p>
+                <div className="prose prose-sm max-w-none text-dark-2 leading-relaxed">
+                  <h3 className="text-dark-1 font-bold text-sm uppercase tracking-wide mb-3 flex items-center gap-2">
+                    Deskripsi
+                  </h3>
+                  <p className="whitespace-pre-line text-justify text-sm md:text-base">{data.description}</p>
+                </div>
               </div>
             </div>
 
@@ -136,11 +151,10 @@ export default function OpportunityDetail() {
           </div>
 
           <div className="lg:col-span-1">
-            <div className="bg-surface p-6 rounded-2xl border border-light-2 shadow-sm sticky top-24">
-
+            <div className="bg-surface p-6 rounded-2xl border border-light-2 shadow-sm sticky top-28">
               <div className="mb-6 text-center pb-6 border-b border-light-2/50">
                 <span className="text-xs text-dark-2 font-medium block mb-1 uppercase tracking-wide">Biaya Pendaftaran</span>
-                <span className={`text-2xl font-bold ${data.cost === 'Gratis' ? 'text-accent' : 'text-dark-1'}`}>
+                <span className={`text-2xl font-bold ${formatCost(data.cost) === 'Gratis' ? 'text-accent' : 'text-dark-1'}`}>
                   {formatCost(data.cost)}
                 </span>
               </div>
@@ -172,7 +186,7 @@ export default function OpportunityDetail() {
                   </div>
                   <div>
                     <p className="text-[10px] text-dark-2/70 font-semibold uppercase tracking-wider">Lokasi</p>
-                    <p className="text-sm font-bold text-dark-1">{data.location}</p>
+                    <p className="text-sm font-bold text-dark-1">{data.location || 'Tidak disebutkan'}</p>
                   </div>
                 </div>
 
@@ -183,7 +197,7 @@ export default function OpportunityDetail() {
                   <div>
                     <p className="text-[10px] text-dark-2/70 font-semibold uppercase tracking-wider">Diposting Oleh</p>
                     <p className="text-sm font-bold text-dark-1">User ID: {data.submitted_by}</p>
-                    <p className="text-[10px] text-dark-2/60 mt-0.5">Verified by Admin #{data.verified_by}</p>
+                    <p className="text-[10px] text-dark-2/60 mt-0.5">Verified by Admin #{data.verified_by || '-'}</p>
                   </div>
                 </div>
               </div>

@@ -4,6 +4,7 @@ const partnerController = require('../controller/partnerController')
 const { authenticate, authorize } = require('../middleware/auth')
 
 router.get('/', partnerController.getAll)
+router.get('/all', authenticate, authorize('admin'), partnerController.getAllForAdmin)
 router.get('/my-requests', authenticate, partnerController.getMyRequests)
 router.get('/:id', partnerController.getById)
 router.post('/submit', authenticate, partnerController.submitForm)

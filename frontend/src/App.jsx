@@ -9,12 +9,15 @@ import PeluangDetail from './pages/PeluangDetail';
 import ForumDetail from './pages/ForumDetail';
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
 import ResetPasswordPage from './pages/ResetPasswordPage';
+import DaftarMitraPage from './pages/DaftarMitraPage';
+import Profile from './pages/Profile';
 import { ThemeProvider } from './context/ThemeContext';
 
 import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import UsersManagement from './pages/admin/UsersManagement';
 import PartnersManagement from './pages/admin/PartnersManagement';
+import CategoriesManagement from './pages/admin/CategoriesManagement';
 import OpportunitiesModeration from './pages/admin/OpportunitiesModeration';
 import ForumModeration from './pages/admin/ForumModeration';
 
@@ -44,6 +47,8 @@ function App() {
             <Route path="/bekal/:id" element={<PeluangDetail />} />
             <Route path="/forgot-password" element={<ForgotPasswordPage />} />
             <Route path="/reset-password" element={<ResetPasswordPage />} />
+            <Route path="/daftar-mitra" element={<DaftarMitraPage />} />
+            <Route path="/profil" element={<Profile />} />
           </Route>
 
           <Route path="/admin" element={<AdminLayout />}>
@@ -51,6 +56,7 @@ function App() {
             <Route path="users" element={<UsersManagement />} />
             <Route path="partners" element={<PartnersManagement />} />
             <Route path="opportunities" element={<OpportunitiesModeration />} />
+            <Route path="categories" element={<CategoriesManagement />} />
             <Route path="forum" element={<ForumModeration />} />
           </Route>
 

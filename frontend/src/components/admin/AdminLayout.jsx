@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, ClipboardList, MessageSquare,
-  LogOut, Menu, X, ShieldCheck
+  LogOut, Menu, X, ShieldCheck, Tags
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '../../lib/api';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -36,6 +36,7 @@ export default function AdminLayout() {
     { name: 'Manajemen User', path: '/admin/users', icon: Users },
     { name: 'Verifikasi Partner', path: '/admin/partners', icon: Briefcase },
     { name: 'Moderasi Peluang', path: '/admin/opportunities', icon: ClipboardList },
+    { name: 'Kategori', path: '/admin/categories', icon: Tags },
     { name: 'Moderasi Forum', path: '/admin/forum', icon: MessageSquare },
   ];
 
@@ -45,7 +46,9 @@ export default function AdminLayout() {
   };
 
   return (
-    <div className="flex min-h-screen bg-light-1 text-dark-1 font-sans overflow-hidden">
+    <div className="flex min-h-screen bg-light-1 text-dark-1 font-sans">
+      
+      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
@@ -53,9 +56,10 @@ export default function AdminLayout() {
         ></div>
       )}
 
+      {/* Sidebar - Always Fixed */}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-sidebar text-on-dark z-50 transform transition-transform duration-300 ease-in-out
-        md:relative md:translate-x-0 md:flex-shrink-0
+        md:translate-x-0
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
       `}>
         <div className="p-6 border-b border-on-dark/10 flex items-center justify-between">
@@ -93,7 +97,7 @@ export default function AdminLayout() {
           })}
         </nav>
 
-        <div className="w-full p-4 border-t border-on-dark/10">
+        <div className="absolute bottom-0 w-full p-4 border-t border-on-dark/10 bg-sidebar">
           <div className="flex items-center gap-3 mb-4 px-2">
             <div className="w-8 h-8 rounded-full bg-on-dark/20 flex items-center justify-center text-xs font-bold">
               {user.full_name?.charAt(0).toUpperCase()}
@@ -113,7 +117,8 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 overflow-hidden">
+      {/* Main Content - Added md:ml-64 to offset fixed sidebar */}
+      <main className="flex-1 flex flex-col min-w-0 md:ml-64">
         <header className="md:hidden sticky top-0 z-30 bg-light-1 border-b border-light-2/50 px-4 py-3 flex items-center justify-between">
           <button onClick={() => setSidebarOpen(true)} className="text-dark-1">
             <Menu className="w-6 h-6" />
@@ -121,7 +126,7 @@ export default function AdminLayout() {
           <span className="font-bold text-dark-1">Admin Panel</span>
           <div className="w-6"></div>
         </header>
-
+        
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </div>

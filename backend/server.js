@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const uploadRoutes = require('./src/routes/uploadRoutes');
 require('dotenv').config();
 
 const { errorHandler, notFoundHandler } = require('./src/middleware/errorHandler');
@@ -52,6 +53,7 @@ app.get('/health', (req, res) => {
 });
 
 // API Routes
+app.use('/api/upload', uploadRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/categories', categoryRoutes);

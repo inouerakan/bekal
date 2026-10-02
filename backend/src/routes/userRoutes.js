@@ -4,6 +4,7 @@ const userController = require('../controller/userController')
 const { authenticate, authorize } = require('../middleware/auth')
 const { use } = require('react')
 
+router.put('/me', authenticate, userController.updateMyProfile)
 router.get('/', authenticate, authorize('admin'), userController.getAll)
 router.get('/:id', authenticate, authorize('admin'), userController.getById)
 router.put('/:id', authenticate, authorize('admin'), userController.update)

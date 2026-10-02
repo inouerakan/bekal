@@ -22,23 +22,19 @@ export default function Navbar() {
 
   const isActive = (path) => location.pathname === path;
 
+  const canApplyPartner = Boolean(user) && ['siswa', 'guru_BK'].includes(user.role);
+
   const navLinks = [
     { name: 'Beranda', path: '/' },
     { name: 'Bekal', path: '/bekal' },
     { name: 'Forum', path: '/forum' },
+    ...(canApplyPartner ? [{ name: 'Jadi Mitra', path: '/daftar-mitra' }] : []),
   ];
 
   return (
     <nav className="fixed top-0 left-0 w-full z-50 px-4 py-4 font-sans">
       <div className="max-w-7xl mx-auto bg-light-1/60 backdrop-blur-sm border-2 border-light-2/20 rounded-2xl flex items-center justify-between px-6 py-3 transition-all duration-300">
 
-        {/* <Link to="/" className="flex items-center gap-2 cursor-pointer group shrink-0">
-          <img
-            src={logo}
-            alt="Bekal Opat Logo"
-            className="h-8 w-auto object-contain group-hover:scale-105 transition-transform duration-300"
-          />
-        </Link> */}
 
         <div className="hidden md:flex items-center gap-2 p-1 rounded-full">
           {navLinks.map((item) => (
@@ -60,8 +56,15 @@ export default function Navbar() {
           <ThemeToggle />
           <div className="hidden md:flex items-center gap-2">
             {user ? <>
-              <span className="text-xs text-dark-1">{user.full_name || user.email}</span>
-              <button onClick={clearSession} className="px-4 py-1.5 text-xs font-semibold rounded-full bg-dark-1 text-light-1 hover:bg-primary hover:text-on-dark">Keluar</button>
+              <Link 
+                to="/profil" 
+                className="text-xs text-dark-1 hover:text-accent font-medium transition-colors"
+              >
+                {user.full_name || user.email}
+              </Link>
+              <button onClick={clearSession} className="px-4 py-1.5 text-xs font-semibold rounded-full bg-dark-1 text-light-1 hover:bg-primary hover:text-on-dark">
+                Keluar
+              </button>
             </> : <>
             <Link
               to="/login"
@@ -108,8 +111,16 @@ export default function Navbar() {
           <div className="h-px bg-light-2/20 my-2"></div>
           <div className="flex flex-col gap-2">
             {user ? <>
-              <span className="px-4 py-2 text-sm text-center text-dark-1">{user.full_name || user.email}</span>
-              <button onClick={() => { clearSession(); setIsMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium bg-dark-1 text-light-1 text-center">Keluar</button>
+              <Link 
+                to="/profil" 
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="px-4 py-2 text-sm text-dark-1 hover:text-accent font-medium transition-colors"
+              >
+                {user.full_name || user.email}
+              </Link>
+              <button onClick={() => { clearSession(); setIsMobileMenuOpen(false); }} className="px-4 py-3 rounded-xl text-sm font-medium bg-dark-1 text-light-1 text-center">
+                Keluar
+              </button>
             </> : <>
             <Link
               to="/login"

@@ -10,17 +10,34 @@ const generateToken = (payload) => {
   return jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '7d' });
 };
 
+const getPartnerVerified = async (userId) => {
+  const [rows] = await db.query(
+    'SELECT MAX(is_verified_partner) AS verified FROM bekal_db_partners WHERE user_id = ?',
+    [userId]
+  );
+  return rows.length > 0 && Number(rows[0].verified) === 1;
+};
+
+const buildUserPayload = async (user) => ({
+  id: user.id,
+  full_name: user.full_name,
+  email: user.email,
+  role: user.role,
+  is_verified: Boolean(user.is_verified),
+  partner_verified: await getPartnerVerified(user.id)
+});
+
 exports.register = [
   body('full_name').trim().notEmpty().withMessage('Nama lengkap wajib diisi'),
   body('email').isEmail().normalizeEmail().withMessage('Email tidak valid'),
   body('password')
     .isLength({ min: 6 }).withMessage('Password minimal 6 karakter')
     .matches(/[0-9]/).withMessage('Password harus mengandung angka'),
-  body('role').optional().isIn(['siswa', 'guru_BK', 'admin', 'mitra']).withMessage('Role tidak valid'),
   validate,
   async (req, res, next) => {
     try {
-      const { full_name, email, password, role, school_name, phone } = req.body;
+      const { full_name, email, password, school_name, phone } = req.body;
+      const role = 'siswa';
       
       const [existing] = await db.query(
         'SELECT id FROM bekal_db_users WHERE email = ?',
@@ -38,13 +55,13 @@ exports.register = [
         `INSERT INTO bekal_db_users 
          (full_name, email, password_hash, role, school_name, phone, is_verified, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, 0, NOW(), NOW())`,
-        [full_name, email, password_hash, role || 'siswa', school_name || null, phone || null]
+        [full_name, email, password_hash, role, school_name || null, phone || null]
       );
 
       const token = generateToken({
         id: result.insertId,
         email,
-        role: role || 'siswa'
+        role: role
       });
 
       res.status(201).json({
@@ -54,7 +71,7 @@ exports.register = [
           id: result.insertId,
           full_name,
           email,
-          role: role || 'siswa',
+          role: role,
           token
         }
       });
@@ -94,22 +111,47 @@ exports.login = [
         role: user.role
       });
 
+      const payload = await buildUserPayload(user);
+
       res.json({
         success: true,
         message: 'Login berhasil',
-        data: {
-          id: user.id,
-          full_name: user.full_name,
-          email: user.email,
-          role: user.role,
-          token
-        }
+        data: { ...payload, token }
       });
     } catch (error) {
       next(error);
     }
   }
 ];
+
+exports.me = async (req, res, next) => {
+  try {
+    const [users] = await db.query(
+      'SELECT id, full_name, email, role, is_verified FROM bekal_db_users WHERE id = ?',
+      [req.user.id]
+    );
+
+    if (users.length === 0) {
+      return res.status(404).json({ success: false, message: 'User tidak ditemukan' });
+    }
+
+    const user = users[0];
+    const token = generateToken({
+      id: user.id,
+      email: user.email,
+      role: user.role
+    });
+    const payload = await buildUserPayload(user);
+
+    res.json({
+      success: true,
+      message: 'OK',
+      data: { ...payload, token }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 exports.forgotPassword = [
   body('email').isEmail().normalizeEmail().withMessage('Email tidak valid'),

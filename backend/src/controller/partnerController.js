@@ -29,6 +29,29 @@ exports.getAll = async (req, res, next) => {
   }
 };
 
+exports.getAllForAdmin = async (req, res, next) => {
+  try {
+    const { status } = req.query;
+    let whereClause = 'WHERE 1=1';
+
+    if (status === 'pending') whereClause += ' AND p.is_verified_partner = 0';
+    if (status === 'verified') whereClause += ' AND p.is_verified_partner = 1';
+
+    const [partners] = await db.query(
+      `SELECT p.id, p.user_id, p.organization_name, p.partner_type, p.contact_email,
+              p.contact_phone, p.is_verified_partner, p.created_at,
+              u.full_name AS user_name, u.email AS user_email, u.role AS user_role
+       FROM bekal_db_partners p
+       LEFT JOIN bekal_db_users u ON p.user_id = u.id
+       ${whereClause}
+       ORDER BY p.is_verified_partner ASC, p.created_at DESC`
+    );
+    res.json({ success: true, count: partners.length, data: partners });
+  } catch (error) {
+    next(error);
+  }
+};
+
 exports.getById = [
   param('id').isInt({ min: 1 }).withMessage('ID partner tidak valid'),
   validate,
@@ -154,17 +177,56 @@ exports.verify = [
     .withMessage('is_verified_partner harus bernilai true atau false'),
   validate,
   async (req, res, next) => {
+    const connection = await db.getConnection();
     try {
-      const [result] = await db.query(
-        'UPDATE bekal_db_partners SET is_verified_partner = ? WHERE id = ?',
-        [req.body.is_verified_partner, req.params.id]
+      const raw = req.body.is_verified_partner;
+      const verified = raw === true || raw === 1 || raw === 'true' || raw === '1';
+
+      await connection.beginTransaction();
+
+      const [partners] = await connection.query(
+        'SELECT id, user_id FROM bekal_db_partners WHERE id = ? FOR UPDATE',
+        [req.params.id]
       );
-      if (!result.affectedRows) {
+      if (!partners.length) {
+        await connection.rollback();
         return res.status(404).json({ success: false, message: 'Partner tidak ditemukan' });
       }
+
+      await connection.query(
+        'UPDATE bekal_db_partners SET is_verified_partner = ? WHERE id = ?',
+        [verified ? 1 : 0, req.params.id]
+      );
+
+      if (verified) {
+        await connection.query(
+          `UPDATE bekal_db_users
+           SET role = IF(role IN ('siswa', 'guru_BK'), 'mitra', role),
+               is_verified = 1,
+               updated_at = NOW()
+           WHERE id = ?`,
+          [partners[0].user_id]
+        );
+      } else {
+        await connection.query(
+          `UPDATE bekal_db_users
+           SET is_verified = 0, updated_at = NOW()
+           WHERE id = ? AND role = 'mitra'`,
+          [partners[0].user_id]
+        );
+      }
+
+      await connection.commit();
       res.json({ success: true, message: 'Status verifikasi partner berhasil diperbarui' });
     } catch (error) {
+      try {
+        await connection.rollback();
+      } catch (rollbackError) {
+        console.error(rollbackError.message);
+      }
       next(error);
+    } finally {
+      connection.release();
     }
   }
 ];
@@ -187,4 +249,3 @@ exports.delete = [
     }
   }
 ];
-

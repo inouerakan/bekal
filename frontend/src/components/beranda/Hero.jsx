@@ -1,10 +1,23 @@
 import { Search, Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getStoredUser } from '../../lib/api';
 
 export default function Hero() {
     const [query, setQuery] = useState('');
     const navigate = useNavigate();
+    const [user, setUser] = useState(() => getStoredUser());
+    const canCompose = Boolean(user) && ['admin', 'guru_BK', 'mitra'].includes(user.role);
+
+    useEffect(() => {
+        const syncUser = () => setUser(getStoredUser());
+        window.addEventListener('bekal-auth-change', syncUser);
+        window.addEventListener('storage', syncUser);
+        return () => {
+            window.removeEventListener('bekal-auth-change', syncUser);
+            window.removeEventListener('storage', syncUser);
+        };
+    }, []);
 
     return (
         <div className="bg-primary min-h-dvh flex flex-col items-center justify-center px-4 py-12 relative">
@@ -47,10 +60,12 @@ export default function Hero() {
                             Cari Peluang
                         </button>
 
-                        <button onClick={() => navigate('/bekal?compose=1')} className="h-12 px-5 rounded-full bg-surface text-accent font-semibold hover:bg-light-2 transition-all shadow-lg flex items-center justify-center gap-1.5 whitespace-nowrap w-full md:w-auto text-sm">
-                            <Plus className="w-4 h-4" />
-                            <span>Buat Info</span>
-                        </button>
+                        {canCompose && (
+                            <button onClick={() => navigate('/bekal?compose=1')} className="h-12 px-5 rounded-full bg-surface text-accent font-semibold hover:bg-light-2 transition-all shadow-lg flex items-center justify-center gap-1.5 whitespace-nowrap w-full md:w-auto text-sm">
+                                <Plus className="w-4 h-4" />
+                                <span>Buat Info</span>
+                            </button>
+                        )}
                     </div>
                 </div>
 

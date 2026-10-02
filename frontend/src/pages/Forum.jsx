@@ -2,8 +2,10 @@ import { useCallback, useEffect, useState } from 'react';
 import { Search, Plus, ArrowRight, ChevronLeft, ChevronRight, Send } from 'lucide-react';
 import ForumCard from '../components/ui/ForumCard';
 import { apiFetch } from '../lib/api';
+import ImageUploader from '../components/ui/ImageUploader';
 
 export default function Forum() {
+  const [newImage, setNewImage] = useState(null);
   const [discussions, setDiscussions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
@@ -44,7 +46,6 @@ export default function Forum() {
   useEffect(() => { loadDiscussions(); }, [loadDiscussions]);
 
   const filteredData = discussions;
-
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
   const handleSearch = (e) => {
@@ -70,6 +71,7 @@ export default function Forum() {
     if (isSubmitting) return;
     setFormErrors({});
     setSubmitError('');
+    setNewImage(null); // ✅ RESET GAMBAR SAAT TUTUP
     setIsModalOpen(false);
   };
 
@@ -100,10 +102,15 @@ export default function Forum() {
     try {
       await apiFetch('/api/forum/discussion', {
         method: 'POST',
-        body: JSON.stringify({ title: newTitle.trim(), content: newContent.trim() }),
+        body: JSON.stringify({ 
+          title: newTitle.trim(), 
+          content: newContent.trim(),
+          image_url: newImage // ✅ KIRIM URL GAMBAR KE BACKEND
+        }),
       });
       setNewTitle('');
       setNewContent('');
+      setNewImage(null); // ✅ RESET GAMBAR SETELAH SUBMIT
       setFormErrors({});
       setIsModalOpen(false);
       setCurrentPage(1);
@@ -229,16 +236,16 @@ export default function Forum() {
             onClick={closeModal}
           ></div>
 
-          <div className="relative bg-surface w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+          <div className="relative bg-surface w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] flex flex-col">
 
-            <div className="bg-primary p-4 flex items-center gap-3">
+            <div className="bg-primary p-4 flex items-center gap-3 shrink-0">
               <div className="bg-on-dark/20 p-1.5 rounded-full text-on-dark">
                 <Plus className="w-4 h-4" />
               </div>
               <h3 className="text-on-dark font-bold text-lg">Buat Diskusi Baru</h3>
             </div>
 
-            <form onSubmit={handleSubmitDiscussion} noValidate className="p-6 space-y-5">
+            <form onSubmit={handleSubmitDiscussion} noValidate className="p-6 space-y-5 overflow-y-auto flex-1">
 
               <div className="space-y-2">
                 <label htmlFor="forum-title" className="text-dark-1 font-bold text-sm block">
@@ -280,6 +287,13 @@ export default function Forum() {
                   <p className="text-xs text-red-600 dark:text-red-400">{formErrors.content}</p>
                 )}
               </div>
+
+              {/* ✅ TAMBAHKAN IMAGE UPLOADER DI SINI */}
+              <ImageUploader 
+                value={newImage} 
+                onChange={setNewImage} 
+                label="Gambar Diskusi (Opsional)" 
+              />
 
               {submitError && (
                 <p role="alert" className="text-sm text-red-600 dark:text-red-300 bg-red-50 dark:bg-red-500/10 rounded-lg px-3 py-2">

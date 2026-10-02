@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
 import { apiFetch, getStoredUser } from '../../lib/api';
+import ImageUploader from './ImageUploader';
 
 export default function OpportunityModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -9,11 +10,12 @@ export default function OpportunityModal({ isOpen, onClose }) {
     organizer_name: '',
     description: '',
     requirements: '',
-    education_level: '',
+    education_level: 'Umum',
     location: '',
     cost: '',
     registration_link: '',
-    deadline: ''
+    deadline: '',
+    image_url: null
   });
   const [categories, setCategories] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -50,11 +52,12 @@ export default function OpportunityModal({ isOpen, onClose }) {
       organizer_name: '',
       description: '',
       requirements: '',
-      education_level: '',
+      education_level: 'Umum',
       location: '',
       cost: '',
       registration_link: '',
-      deadline: ''
+      deadline: '',
+      image_url: null,
     });
     setError(null);
     setSuccess(false);
@@ -67,7 +70,7 @@ export default function OpportunityModal({ isOpen, onClose }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!user || !['admin', 'guru_BK'].includes(user.role)) {
+    if (!user || !['admin', 'guru_BK', 'mitra'].includes(user.role)) {
       setError('Akses ditolak.');
       return;
     }
@@ -79,6 +82,7 @@ export default function OpportunityModal({ isOpen, onClose }) {
     try {
       const payload = {
         ...formData,
+        image_url: formData.image_url || null,
         category_id: parseInt(formData.category_id),
         deadline: formData.deadline ? new Date(formData.deadline).toISOString().split('T')[0] : null
       };
@@ -86,6 +90,10 @@ export default function OpportunityModal({ isOpen, onClose }) {
       delete payload.cost;
       if (formData.cost && formData.cost.trim() !== '') {
         payload.cost = formData.cost;
+      }
+
+      if (!formData.registration_link || formData.registration_link.trim() === '') {
+        delete payload.registration_link;
       }
 
       await apiFetch('/api/opportunities', {
@@ -214,6 +222,12 @@ export default function OpportunityModal({ isOpen, onClose }) {
                 />
               </div>
 
+              <ImageUploader 
+                value={formData.image_url} 
+                onChange={(url) => setFormData(prev => ({ ...prev, image_url: url }))} 
+                label="Thumbnail Peluang (Opsional)" 
+              />
+
               <div>
                 <label className="block text-xs font-semibold text-dark-2 mb-1.5">Persyaratan Khusus</label>
                 <textarea
@@ -252,12 +266,11 @@ export default function OpportunityModal({ isOpen, onClose }) {
                     onChange={handleChange}
                     className="w-full px-4 py-2.5 bg-light-1 border-none rounded-xl text-sm text-dark-1 focus:ring-2 focus:ring-primary/20 outline-none cursor-pointer appearance-none"
                   >
-                    <option value="">Semua Jenjang</option>
-                    <option value="SMP">SMP</option>
+                    <option value="Umum">Umum / Semua Jenjang</option>
                     <option value="SMA/SMK">SMA/SMK</option>
-                    <option value="Diploma">Diploma</option>
-                    <option value="Sarjana">Sarjana (S1)</option>
-                    <option value="Umum">Umum</option>
+                    <option value="D3">Diploma (D3)</option>
+                    <option value="S1">Sarjana (S1)</option>
+                    <option value="S2">Magister (S2)</option>
                   </select>
                 </div>
 

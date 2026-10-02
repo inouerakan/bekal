@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle, XCircle, Calendar, MapPin, User } from 'lucide-react';
+import { CheckCircle, XCircle, Calendar, MapPin, User, Trash2 } from 'lucide-react';
 import { apiFetch } from '../../lib/api';
 
 export default function OpportunitiesModeration() {
@@ -14,7 +14,6 @@ export default function OpportunitiesModeration() {
       if (statusFilter !== 'all') {
         params.append('status', statusFilter);
       }
-
       const result = await apiFetch(`/api/opportunities/all?${params.toString()}`);
       setOpportunities(result.data || []);
     } catch (error) {
@@ -33,7 +32,6 @@ export default function OpportunitiesModeration() {
       reason = prompt('Alasan penolakan:');
       if (reason === null) return;
     }
-
     try {
       await apiFetch(`/api/opportunities/${id}/verify`, {
         method: 'PATCH',
@@ -46,6 +44,17 @@ export default function OpportunitiesModeration() {
       fetchOpportunities();
     } catch (error) {
       alert('Error: ' + error.message);
+    }
+  };
+
+  const handleDelete = async (id, title) => {
+    if (!confirm(`Hapus peluang "${title}" secara permanen? Tindakan ini tidak bisa dibatalkan.`)) return;
+    try {
+      await apiFetch(`/api/opportunities/${id}`, { method: 'DELETE' });
+      alert('Peluang berhasil dihapus');
+      fetchOpportunities();
+    } catch (error) {
+      alert('Gagal menghapus: ' + error.message);
     }
   };
 
@@ -89,19 +98,19 @@ export default function OpportunitiesModeration() {
                 </span>
                 <span className="text-[10px] text-dark-2/50">{opp.category_name}</span>
               </div>
-
+              
               <h3 className="text-dark-1 font-bold text-base mb-2 line-clamp-2">{opp.title}</h3>
               <p className="text-dark-2 text-xs mb-4 line-clamp-3 flex-1">{opp.description}</p>
-
+              
               <div className="space-y-2 text-xs text-dark-2/70 mb-4">
                 <div className="flex items-center gap-2"><Calendar className="w-3 h-3"/> Deadline: {new Date(opp.deadline).toLocaleDateString('id-ID')}</div>
                 <div className="flex items-center gap-2"><MapPin className="w-3 h-3"/> {opp.location}</div>
                 <div className="flex items-center gap-2"><User className="w-3 h-3"/> Oleh: {opp.submitted_by_name || '-'}</div>
               </div>
 
-              <div className="pt-4 border-t border-light-2/30 mt-auto flex gap-2">
+              <div className="pt-4 border-t border-light-2/30 mt-auto space-y-2">
                 {opp.status === 'pending' && (
-                  <>
+                  <div className="flex gap-2">
                     <button
                       onClick={() => handleAction(opp.id, 'approve')}
                       className="flex-1 py-2 bg-green-600 text-white rounded-lg text-xs font-bold hover:bg-green-700 transition-colors flex items-center justify-center gap-1"
@@ -114,13 +123,15 @@ export default function OpportunitiesModeration() {
                     >
                       <XCircle className="w-3 h-3"/> Reject
                     </button>
-                  </>
+                  </div>
                 )}
-                {opp.status !== 'pending' && (
-                   <div className="w-full text-center text-xs text-dark-2/50 py-2">
-                     Sudah diproses
-                   </div>
-                )}
+                
+                <button
+                  onClick={() => handleDelete(opp.id, opp.title)}
+                  className="w-full py-2 bg-light-1 hover:bg-red-50 text-dark-2 hover:text-red-600 dark:hover:bg-red-500/10 dark:hover:text-red-400 border border-light-2 hover:border-red-200 dark:hover:border-red-500/30 rounded-lg text-xs font-bold transition-colors flex items-center justify-center gap-1"
+                >
+                  <Trash2 className="w-3 h-3"/> Hapus Permanen
+                </button>
               </div>
             </div>
           ))

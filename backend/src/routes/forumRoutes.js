@@ -9,5 +9,6 @@ router.post('/discussion', authenticate, forumController.createDiscussion);
 router.post('/:id/comment', authenticate, forumController.createComment);
 router.post('/:id/like', authenticate, forumController.toggleLike);
 router.delete('/:id', authenticate, forumController.delete);
+router.get('/comments', authenticate, forumController.getAllComments);
 
 module.exports = router;

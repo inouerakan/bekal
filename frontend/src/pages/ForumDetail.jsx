@@ -12,6 +12,21 @@ import {
 } from 'lucide-react';
 import { apiFetch } from '../lib/api';
 
+const BAD_WORDS = [
+  'anjing', 'babi', 'bangsat', 'kontol', 'memek', 'ngentot', 'tolol',
+  'goblok', 'bodoh', 'idiot', 'kampret', 'taik', 'tai', 'jancok',
+  'cok', 'asu', 'jembut', 'perek', 'lonte', 'bacot', 'sialan'
+];
+
+const containsBadWord = (text) => {
+  if (!text) return false;
+  const lower = text.toLowerCase().replace(/[^a-z0-9\s]/g, '');
+  return BAD_WORDS.some(word => {
+    const regex = new RegExp(`\\b${word}\\b`, 'i');
+    return regex.test(lower);
+  });
+};
+
 export default function ForumDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -19,6 +34,8 @@ export default function ForumDetail() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isLiking, setIsLiking] = useState(false);
+  const [commentError, setCommentError] = useState('');
 
   const loadPost = useCallback(async () => {
     setIsLoading(true);
@@ -52,23 +69,35 @@ export default function ForumDetail() {
     const now = new Date();
     const diffTime = Math.abs(now - date);
     const diffHours = Math.ceil(diffTime / (1000 * 60 * 60));
-
     if (diffHours < 24) return `${diffHours} jam lalu`;
     return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
   };
 
   const handleLike = async () => {
+    if (isLiking) return;
+    setIsLiking(true);
     try {
       const result = await apiFetch(`/api/forum/${id}/like`, { method: 'POST' });
-      setData((current) => ({ ...current, like_count: result.data.like_count }));
+      setData((current) => ({
+        ...current,
+        like_count: result.data.like_count,
+        user_has_liked: result.data.liked
+      }));
     } catch (actionError) {
       setError(actionError.message);
+    } finally {
+      setIsLiking(false);
     }
   };
 
   const handleCommentSubmit = async (e) => {
     e.preventDefault();
+    setCommentError('');
     if (!newComment.trim()) return;
+    if (containsBadWord(newComment)) {
+      setCommentError('Komentar mengandung kata yang tidak pantas. Harap gunakan bahasa yang sopan.');
+      return;
+    }
     try {
       await apiFetch(`/api/forum/${id}/comment`, {
         method: 'POST',
@@ -77,20 +106,18 @@ export default function ForumDetail() {
       setNewComment('');
       await loadPost();
     } catch (actionError) {
-      setError(actionError.message);
+      setCommentError(actionError.message);
     }
   };
 
-  if (isLoading) return <div className="pt-24 text-center text-dark-2">Memuat diskusi...</div>;
-  if (!data) return <div className="pt-24 text-center text-dark-2">{error || 'Diskusi tidak ditemukan.'}</div>;
+  if (isLoading) return <div className="pt-28 min-h-screen flex items-center justify-center bg-light-1"><div className="text-dark-2">Memuat diskusi...</div></div>;
+  if (!data) return <div className="pt-28 min-h-screen flex items-center justify-center bg-light-1"><div className="text-dark-2">{error || 'Diskusi tidak ditemukan.'}</div></div>;
 
   return (
-    <div className="pt-20 min-h-screen bg-light-1 pb-12">
+    <div className="pt-28 min-h-screen bg-light-1 pb-12">
       <div className="max-w-3xl mx-auto px-4 sm:px-6">
         {error && <p role="alert" className="mb-4 text-center text-sm text-red-600 dark:text-red-400">{error}</p>}
-
         <div className="bg-surface rounded-2xl border border-light-2 shadow-sm overflow-hidden relative mb-6">
-
           <button
             onClick={() => navigate(-1)}
             className="absolute top-4 left-4 p-2 rounded-full bg-light-1 hover:bg-primary/10 text-dark-2 hover:text-accent transition-all duration-200 group z-10 border border-light-2/50"
@@ -98,7 +125,6 @@ export default function ForumDetail() {
           >
             <ArrowLeft size={18} className="group-hover:-translate-x-0.5 transition-transform" />
           </button>
-
           <div className="p-6 md:p-8 pt-16">
             <div className="flex items-start justify-between mb-4">
               <div className="flex items-center gap-3">
@@ -114,15 +140,21 @@ export default function ForumDetail() {
                 <MoreHorizontal size={18} />
               </button>
             </div>
-
             <h1 className="text-xl md:text-2xl font-bold text-dark-1 mb-4 leading-snug">
               {data.title}
             </h1>
-
             <div className="prose prose-sm max-w-none text-dark-2 leading-relaxed mb-6">
               <p className="whitespace-pre-line">{data.content}</p>
             </div>
-
+            {data.image_url && (
+              <div className="my-6 rounded-xl overflow-hidden border border-light-2/50">
+                <img 
+                  src={data.image_url} 
+                  alt="Forum attachment" 
+                  className="w-full h-auto max-h-96 object-cover"
+                />
+              </div>
+            )}
             <div className="flex items-center justify-between pt-4 border-t border-light-2/50">
               <div className="flex items-center gap-4 text-xs text-dark-2/70 font-medium">
                 <span className="flex items-center gap-1.5">
@@ -138,7 +170,6 @@ export default function ForumDetail() {
                   {data.comment_count} Komentar
                 </span>
               </div>
-
               <div className="flex items-center gap-2">
                  <button className="p-2 hover:bg-light-1 rounded-lg text-dark-2/60 hover:text-accent transition-colors" title="Simpan">
                     <Bookmark size={18} />
@@ -148,14 +179,18 @@ export default function ForumDetail() {
                  </button>
               </div>
             </div>
-
             <div className="flex gap-3 mt-4">
                <button
                   onClick={handleLike}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border border-light-2 text-dark-2 text-sm font-semibold hover:bg-light-1 hover:border-primary/30 transition-all"
+                  disabled={isLiking}
+                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border text-sm font-semibold transition-all ${
+                    data.user_has_liked
+                      ? 'bg-primary/10 border-primary/30 text-accent'
+                      : 'border-light-2 text-dark-2 hover:bg-light-1 hover:border-primary/30'
+                  } ${isLiking ? 'opacity-60 cursor-not-allowed' : ''}`}
                >
-                  <Heart size={16} />
-                  Suka
+                  <Heart size={16} className={data.user_has_liked ? 'fill-current' : ''} />
+                  {data.user_has_liked ? 'Batal Suka' : 'Suka'}
                </button>
                <button
                   onClick={() => document.getElementById('comment-input').focus()}
@@ -167,13 +202,11 @@ export default function ForumDetail() {
             </div>
           </div>
         </div>
-
         <div className="bg-surface rounded-2xl border border-light-2 shadow-sm p-6 md:p-8">
           <h3 className="text-sm font-bold text-dark-1 uppercase tracking-wide mb-6 flex items-center gap-2">
             <MessageSquare size={16} className="text-accent" />
             Diskusi ({data.comments.length})
           </h3>
-
           <form onSubmit={handleCommentSubmit} className="mb-8">
             <div className="flex gap-3">
               <div className="w-8 h-8 rounded-full bg-light-2 flex items-center justify-center text-dark-2 text-xs font-bold shrink-0 mt-1">
@@ -183,11 +216,16 @@ export default function ForumDetail() {
                 <textarea
                   id="comment-input"
                   value={newComment}
-                  onChange={(e) => setNewComment(e.target.value)}
+                  onChange={(e) => { setNewComment(e.target.value); setCommentError(''); }}
                   placeholder="Tulis tanggapan atau pertanyaan..."
-                  className="w-full bg-light-1 border border-light-2 rounded-xl p-3 text-sm text-dark-1 placeholder:text-dark-2/50 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary resize-none min-h-20 transition-all"
+                  className={`w-full bg-light-1 border rounded-xl p-3 text-sm text-dark-1 placeholder:text-dark-2/50 focus:outline-none focus:ring-1 resize-none min-h-20 transition-all ${
+                    commentError ? 'border-red-400 focus:border-red-400 focus:ring-red-400' : 'border-light-2 focus:border-primary focus:ring-primary'
+                  }`}
                   rows="2"
                 />
+                {commentError && (
+                  <p className="text-xs text-red-600 dark:text-red-400 mt-1.5 ml-1">{commentError}</p>
+                )}
                 <div className="flex justify-end mt-2">
                   <button
                     type="submit"
@@ -205,7 +243,6 @@ export default function ForumDetail() {
               </div>
             </div>
           </form>
-
           <div className="space-y-6">
             {data.comments.length > 0 ? (
               data.comments.map((comment) => (
@@ -239,7 +276,6 @@ export default function ForumDetail() {
             )}
           </div>
         </div>
-
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Search, Filter, Trash2, ShieldCheck, ShieldAlert, RefreshCw } from 'lucide-react';
-import { apiFetch } from '../../lib/api';
+import { Search, Filter, Trash2, ShieldCheck, ShieldAlert, RefreshCw, UserCheck, UserX } from 'lucide-react';
+import { apiFetch, getStoredUser } from '../../lib/api';
 
 export default function UsersManagement() {
   const [users, setUsers] = useState([]);
@@ -10,6 +10,10 @@ export default function UsersManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const limit = 10;
+  const currentUser = getStoredUser();
+
+  const isUserVerified = (user) =>
+    user.role === 'mitra' ? Boolean(user.partner_verified) : Boolean(user.is_verified);
 
   const fetchUsers = async () => {
     setLoading(true);
@@ -50,14 +54,33 @@ export default function UsersManagement() {
   const handleChangeRole = async (userId, newRole) => {
     if(!confirm(`Ubah peran user ID ${userId} menjadi ${newRole}?`)) return;
     try {
-      await apiFetch(`/api/users/${userId}`, {
+      const result = await apiFetch(`/api/users/${userId}`, {
         method: 'PUT',
         body: JSON.stringify({ role: newRole })
       });
-      alert('Peran berhasil diubah');
+      alert(
+        newRole === 'mitra'
+          ? 'Peran berhasil diubah. Akun mitra sudah otomatis terverifikasi.'
+          : (result.message || 'Peran berhasil diubah')
+      );
       fetchUsers();
     } catch (error) {
       alert('Gagal mengubah peran: ' + error.message);
+      fetchUsers();
+    }
+  };
+
+  const handleToggleVerify = async (user) => {
+    const nextStatus = !isUserVerified(user);
+    if(!confirm(nextStatus ? `Verifikasi ${user.full_name} sebagai mitra?` : `Cabut verifikasi ${user.full_name}?`)) return;
+    try {
+      await apiFetch(`/api/users/${user.id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ is_verified: nextStatus })
+      });
+      fetchUsers();
+    } catch (error) {
+      alert('Gagal memperbarui verifikasi: ' + error.message);
     }
   };
 
@@ -137,8 +160,10 @@ export default function UsersManagement() {
                     <td className="px-6 py-4">
                       <select
                         value={user.role}
+                        disabled={currentUser?.id === user.id}
+                        title={currentUser?.id === user.id ? 'Tidak bisa mengubah role akun sendiri' : undefined}
                         onChange={(e) => handleChangeRole(user.id, e.target.value)}
-                        className="bg-transparent text-dark-1 border border-light-2 rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer"
+                        className="bg-transparent text-dark-1 border border-light-2 rounded px-2 py-1 text-xs font-medium focus:outline-none focus:border-primary cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         <option value="siswa">Siswa</option>
                         <option value="guru_BK">Guru BK</option>
@@ -147,7 +172,7 @@ export default function UsersManagement() {
                       </select>
                     </td>
                     <td className="px-6 py-4">
-                      {user.is_verified ? (
+                      {isUserVerified(user) ? (
                         <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-green-100 text-green-700 dark:bg-green-500/15 dark:text-green-300 text-xs font-bold">
                           <ShieldCheck className="w-3 h-3" /> Terverifikasi
                         </span>
@@ -161,13 +186,29 @@ export default function UsersManagement() {
                       {new Date(user.created_at).toLocaleDateString('id-ID')}
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <button
-                        onClick={() => handleDeleteUser(user.id)}
-                        className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors"
-                        title="Hapus User"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center justify-end gap-1">
+                        {user.role === 'mitra' && (
+                          <button
+                            onClick={() => handleToggleVerify(user)}
+                            className={`p-2 rounded-lg transition-colors ${
+                              isUserVerified(user)
+                                ? 'text-yellow-600 hover:bg-yellow-500/10'
+                                : 'text-green-600 hover:bg-green-500/10'
+                            }`}
+                            title={isUserVerified(user) ? 'Cabut Verifikasi Mitra' : 'Verifikasi Mitra'}
+                          >
+                            {isUserVerified(user) ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+                          </button>
+                        )}
+                        <button
+                          onClick={() => handleDeleteUser(user.id)}
+                          disabled={currentUser?.id === user.id}
+                          className="p-2 text-red-500 hover:bg-red-500/10 rounded-lg transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                          title="Hapus User"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
