@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useLocation, Outlet, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, Users, Briefcase, ClipboardList, MessageSquare,
-  LogOut, Menu, X, ShieldCheck, Tags
+  LogOut, Menu, X, ShieldCheck, Tags, DollarSign
 } from 'lucide-react';
 import { clearSession, getStoredUser } from '../../lib/api';
 import ThemeToggle from '../ui/ThemeToggle';
@@ -38,6 +38,7 @@ export default function AdminLayout() {
     { name: 'Moderasi Peluang', path: '/admin/opportunities', icon: ClipboardList },
     { name: 'Kategori', path: '/admin/categories', icon: Tags },
     { name: 'Moderasi Forum', path: '/admin/forum', icon: MessageSquare },
+    { name: 'Slot Iklan', path: '/admin/featured', icon: DollarSign },
   ];
 
   const handleLogout = () => {
@@ -47,8 +48,6 @@ export default function AdminLayout() {
 
   return (
     <div className="flex min-h-screen bg-light-1 text-dark-1 font-sans">
-      
-      {/* Mobile Overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden"
@@ -56,7 +55,6 @@ export default function AdminLayout() {
         ></div>
       )}
 
-      {/* Sidebar - Always Fixed */}
       <aside className={`
         fixed top-0 left-0 h-full w-64 bg-sidebar text-on-dark z-50 transform transition-transform duration-300 ease-in-out
         md:translate-x-0
@@ -68,8 +66,8 @@ export default function AdminLayout() {
               <ShieldCheck className="w-5 h-5 text-on-dark" />
             </div>
             <span className="font-bold text-lg tracking-tight">Bekal Admin</span>
-            <ThemeToggle />
           </div>
+          <ThemeToggle />
           <button onClick={() => setSidebarOpen(false)} className="md:hidden text-on-dark/70 hover:text-on-dark">
             <X className="w-5 h-5" />
           </button>
@@ -117,7 +115,6 @@ export default function AdminLayout() {
         </div>
       </aside>
 
-      {/* Main Content - Added md:ml-64 to offset fixed sidebar */}
       <main className="flex-1 flex flex-col min-w-0 md:ml-64">
         <header className="md:hidden sticky top-0 z-30 bg-light-1 border-b border-light-2/50 px-4 py-3 flex items-center justify-between">
           <button onClick={() => setSidebarOpen(true)} className="text-dark-1">
@@ -126,7 +123,6 @@ export default function AdminLayout() {
           <span className="font-bold text-dark-1">Admin Panel</span>
           <div className="w-6"></div>
         </header>
-        
         <div className="flex-1 overflow-y-auto p-4 md:p-8">
           <Outlet />
         </div>
