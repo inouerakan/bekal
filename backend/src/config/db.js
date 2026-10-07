@@ -12,6 +12,7 @@ const pool = mysql.createPool({
   queueLimit: 0,
   charset: 'utf8mb4',
   timezone: 'Z',
+  namedPlaceholders: false
 });
 
 pool

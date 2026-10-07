@@ -27,14 +27,21 @@ export default function Forum() {
     try {
       const params = new URLSearchParams({ limit: '100', search: searchQuery });
       const result = await apiFetch(`/api/forum?${params}`);
+      
       setDiscussions((result.data || []).map((post) => ({
-        ...post,
+        ...post, // <- Ini penting agar semua field asli (termasuk user_has_liked) terbawa
+        
+        // Mapping ulang untuk kebutuhan tampilan ForumCard
         author: post.user_name || 'Pengguna',
         avatar: (post.user_name || 'P').split(' ').map((part) => part[0]).join('').slice(0, 2).toUpperCase(),
         likes: post.like_count || 0,
         comments: post.comment_count || 0,
         time: post.created_at ? new Date(post.created_at).toLocaleDateString('id-ID') : '',
+        
+        // PASTIKAN FIELD INIK DIKIRIM KE FORUMCARD AGAR IKON HATI BISA MERAH SAAT REFRESH
+        user_has_liked: Boolean(post.user_has_liked), 
       })));
+      
       setError('');
     } catch (fetchError) {
       setError(fetchError.message);
