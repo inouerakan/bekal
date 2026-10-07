@@ -45,9 +45,6 @@ pids
 *.pid.lock
 .pm2/
 
-# TypeScript compilation output (if using TS on backend)
-lib/
-
 # ==========================================
 # Environment Variables & Secrets (CRITICAL)
 # ==========================================
