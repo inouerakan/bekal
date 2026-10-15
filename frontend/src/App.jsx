@@ -12,6 +12,7 @@ import ResetPasswordPage from './pages/ResetPasswordPage';
 import Profile from './pages/Profile';
 import DaftarMitraPage from './pages/DaftarMitraPage';
 import PeluangDetail from './pages/PeluangDetail';
+import OpportunityModal from './components/ui/OpportunityModal';
 import AdminLayout from './components/admin/AdminLayout';
 import Dashboard from './pages/admin/Dashboard';
 import UsersManagement from './pages/admin/UsersManagement';
@@ -40,6 +41,7 @@ function App() {
           <Route element={<PublicWrapper />}>
             <Route path="/" element={<Beranda />} />
             <Route path="/bekal" element={<Bekal />} />
+            <Route path="/bekal/ajukan" element={<OpportunityModal />} />
             <Route path="/bekal/:id" element={<PeluangDetail />} />
             <Route path="/forum" element={<Forum />} />
             <Route path="/forum/:id" element={<ForumDetail />} />
@@ -50,7 +52,6 @@ function App() {
             <Route path="/profil" element={<Profile />} />
             <Route path="/daftar-mitra" element={<DaftarMitraPage />} />
           </Route>
-
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<Dashboard />} />
             <Route path="users" element={<UsersManagement />} />
@@ -60,7 +61,6 @@ function App() {
             <Route path="forum" element={<ForumModeration />} />
             <Route path="featured" element={<FeaturedManagement />} />
           </Route>
-
           <Route path="*" element={
             <div className="flex items-center justify-center min-h-screen bg-light-1">
               <h1 className="text-2xl text-dark-1">Halaman Tidak Ditemukan</h1>

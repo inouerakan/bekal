@@ -2,6 +2,12 @@ const { body, param } = require('express-validator');
 const db = require('../config/db');
 const validate = require('../middleware/validate');
 
+const sanitizeCost = (val) => {
+  if (val === undefined || val === null || val === '') return null;
+  const cleaned = String(val).replace(/[^0-9]/g, '');
+  return cleaned ? parseInt(cleaned, 10) : 0;
+};
+
 exports.getAll = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -200,6 +206,9 @@ exports.create = [
         title, category_id, organizer_name, description, image_url, requirements,
         education_level, location, cost, registration_link, deadline
       } = req.body;
+
+      const finalCost = sanitizeCost(cost);
+
       const [result] = await db.query(
         `INSERT INTO bekal_db_opportunities
          (category_id, title, organizer_name, description, image_url, requirements,
@@ -207,7 +216,7 @@ exports.create = [
           submitted_by, status, view_count, created_at, updated_at)
          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', 0, NOW(), NOW())`,
         [category_id, title, organizer_name, description, image_url || null, requirements || null,
-         education_level || 'Umum', location || null, cost || null,
+         education_level || 'Umum', location || null, finalCost,
          registration_link || null, deadline, req.user.id]
       );
       res.status(201).json({
@@ -262,7 +271,10 @@ exports.update = [
       if (requirements !== undefined) { fields.push('requirements = ?'); values.push(requirements); }
       if (education_level !== undefined) { fields.push('education_level = ?'); values.push(education_level); }
       if (location !== undefined) { fields.push('location = ?'); values.push(location); }
-      if (cost !== undefined) { fields.push('cost = ?'); values.push(cost); }
+      if (cost !== undefined) { 
+        fields.push('cost = ?'); 
+        values.push(sanitizeCost(cost)); 
+      }
       if (registration_link !== undefined) { fields.push('registration_link = ?'); values.push(registration_link); }
       if (deadline !== undefined) { fields.push('deadline = ?'); values.push(deadline); }
 
