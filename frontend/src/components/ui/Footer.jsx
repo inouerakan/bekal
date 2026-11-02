@@ -40,7 +40,7 @@ export default function Footer() {
                     <div className="min-w-50 max-w-xs">
                         <h3 className="text-lg font-bold mb-4 text-on-dark">About Us</h3>
                         <p className="text-on-dark/80 text-xs leading-relaxed">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi blandit diam non magna pulvinar malesuada.
+                           Temukan ribuan peluang pengembangan diri, kompetisi nasional, dan lowongan kerja/magang terverifikasi untuk para pelajar di seluruh Indonesia.
                         </p>
                     </div>
                     <div className="min-w-37.5 max-w-xs">
@@ -55,14 +55,14 @@ export default function Footer() {
                             ))}
                         </ul>
                     </div>
-                    <div className="w-full ml-auto md:w-64 lg:w-72 h-48 md:h-auto md:min-h-50 rounded-xl overflow-hidden border border-on-dark/10 relative group shrink-0">
+                    {/* <div className="w-full ml-auto md:w-64 lg:w-72 h-48 md:h-auto md:min-h-50 rounded-xl overflow-hidden border border-on-dark/10 relative group shrink-0">
                         <div className="absolute inset-0 bg-on-dark/10 flex items-center justify-center">
                             <div className="text-center p-4">
                                 <MapPin className="w-8 h-8 text-on-dark/50 mx-auto mb-2" />
                                 <span className="text-xs text-on-dark/60">Interactive Map</span>
                             </div>
                         </div>
-                    </div>
+                    </div> */}
                 </div>
                 <div className="pt-6 border-t border-on-dark/10">
                     <p className="text-xs font-semibold text-on-dark">

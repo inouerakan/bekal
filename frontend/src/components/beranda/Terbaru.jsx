@@ -9,7 +9,7 @@ export default function Terbaru() {
     const [error, setError] = useState('');
 
     useEffect(() => {
-        apiFetch('/api/opportunities?page=1&limit=6&sort=newest')
+        apiFetch('/api/opportunities?page=1&limit=3&sort=newest')
             .then((result) => setOpportunities(result.data || []))
             .catch((fetchError) => setError(fetchError.message));
     }, []);
